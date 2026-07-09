@@ -8,6 +8,19 @@ def health_check():
     return "OK"
 
 
+@home_bp.route("/test")
+def test_route():
+    import sys
+    import os
+    info = [
+        "CHERE Test Route",
+        f"Python: {sys.version}",
+        f"FLASK_CONFIG: {os.getenv('FLASK_CONFIG', 'not set')}",
+        f"DATABASE_URL: {'set' if os.getenv('DATABASE_URL') else 'not set'}",
+    ]
+    return "<br>".join(info)
+
+
 @home_bp.route("/")
 def index():
     try:

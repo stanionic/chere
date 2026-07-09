@@ -25,7 +25,7 @@ class DevelopmentConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    DEBUG = False
+    DEBUG = True  # Temporarily enabled for troubleshooting
     # Handle Render's PostgreSQL URL, which starts with postgresql://
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgresql://"):
