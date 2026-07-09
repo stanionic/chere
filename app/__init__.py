@@ -72,3 +72,7 @@ from app.models import User  # noqa: E402  (nécessaire pour user_loader)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+# Create a default app instance for gunicorn app:app
+app = create_app()
