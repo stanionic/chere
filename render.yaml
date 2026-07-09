@@ -3,7 +3,7 @@ services:
     name: chere-app
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python seed.py
     startCommand: gunicorn wsgi:app
     envVars:
       - key: PYTHON_VERSION
