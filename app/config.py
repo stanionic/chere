@@ -6,6 +6,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
+def _fix_db_url(url):
+    if url and url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    return url
+
+
 class BaseConfig:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -26,25 +32,12 @@ class DevelopmentConfig(BaseConfig):
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
-
-    @classmethod
-    def _get_db_uri(cls):
-        uri = os.environ.get("DATABASE_URL", "")
-        if uri.startswith("postgresql://"):
-            uri = uri.replace("postgresql://", "postgresql+psycopg2://", 1)
-        return uri
-
-    SQLALCHEMY_DATABASE_URI = property(lambda self: ProductionConfig._get_db_uri())
-
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 
-
-# Resolve SQLALCHEMY_DATABASE_URI at instantiation time for ProductionConfig
-_prod_uri = os.environ.get("DATABASE_URL", "")
-if _prod_uri.startswith("postgresql://"):
-    _prod_uri = _prod_uri.replace("postgresql://", "postgresql+psycopg2://", 1)
-ProductionConfig.SQLALCHEMY_DATABASE_URI = _prod_uri
+    @property
+    def SQLALCHEMY_DATABASE_URI(self):
+        return _fix_db_url(os.environ.get("DATABASE_URL", ""))
 
 
 class TestingConfig(BaseConfig):

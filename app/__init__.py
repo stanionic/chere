@@ -1,6 +1,5 @@
 """
 Application factory CHERE.
-Architecture modulaire par Blueprints, suivant les principes SOLID.
 """
 from flask import Flask, render_template
 from app.config import config
@@ -9,7 +8,8 @@ from app.extensions import db, migrate, login_manager, csrf
 
 def create_app(config_name="development"):
     app = Flask(__name__)
-    app.config.from_object(config[config_name])
+    # Instantiate config so @property values are resolved at runtime
+    app.config.from_object(config[config_name]())
 
     db.init_app(app)
     migrate.init_app(app, db)
