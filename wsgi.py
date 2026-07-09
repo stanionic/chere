@@ -12,6 +12,10 @@ app = create_app(os.getenv("FLASK_CONFIG", "production"))
 def _bootstrap_db():
     with app.app_context():
         try:
+            uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+            logger.info("DB URI: %s", uri[:40] if uri else "NOT SET")
+            if not uri:
+                raise RuntimeError("SQLALCHEMY_DATABASE_URI is not set")
             db.create_all()
             for name in ("admin", "editor", "viewer"):
                 if not Role.query.filter_by(name=name).first():
