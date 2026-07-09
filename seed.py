@@ -16,8 +16,12 @@ app = create_app(os.getenv("FLASK_CONFIG", "development"))
 
 
 def run():
+    print("Starting seed script...")
+    print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
     with app.app_context():
+        print("Creating all tables...")
         db.create_all()
+        print("Tables created.")
 
         # --- Rôles ---
         if not Role.query.filter_by(name="admin").first():
