@@ -6,7 +6,7 @@ from app.models import User, Role
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = create_app(os.getenv("FLASK_CONFIG", "production"))
+app = create_app(os.getenv("FLASK_CONFIG", "production").strip())
 
 
 def _bootstrap_db():

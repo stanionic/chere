@@ -37,7 +37,8 @@ class ProductionConfig(BaseConfig):
 
     @property
     def SQLALCHEMY_DATABASE_URI(self):
-        return _fix_db_url(os.environ.get("DATABASE_URL", ""))
+        url = os.environ.get("DATABASE_URL", "")
+        return _fix_db_url(url) if url else "sqlite:///chere.db"
 
 
 class TestingConfig(BaseConfig):

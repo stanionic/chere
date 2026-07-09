@@ -8,7 +8,9 @@ from app.extensions import db, migrate, login_manager, csrf
 
 def create_app(config_name="development"):
     app = Flask(__name__)
-    # Instantiate config so @property values are resolved at runtime
+    config_name = (config_name or "development").strip()
+    if config_name not in config:
+        config_name = "development"
     app.config.from_object(config[config_name]())
 
     db.init_app(app)
