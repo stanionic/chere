@@ -1,37 +1,34 @@
-
 import os
-from app import create_app, db
-from app.models import User  # Import models so they're registered
 import logging
+from app import create_app, db
+from app.models import User, Role
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-config_name = os.getenv("FLASK_CONFIG", "development")
-app = create_app(config_name=config_name)
+app = create_app(os.getenv("FLASK_CONFIG", "production"))
 
 
-def initialize_database():
-    """Initialize the database."""
-    try:
-        logger.info("Initializing database...")
-        with app.app_context():
+def _bootstrap_db():
+    with app.app_context():
+        try:
             db.create_all()
-            logger.info("Database tables created.")
-            
-            # Check if admin user exists, if not, create it
+            for name in ("admin", "editor", "viewer"):
+                if not Role.query.filter_by(name=name).first():
+                    db.session.add(Role(name=name))
+            db.session.commit()
+            admin_role = Role.query.filter_by(name="admin").first()
             if not User.query.filter_by(email="admin@chere-global.org").first():
-                from seed import create_admin
-                create_admin()
+                u = User(full_name="Admin CHERE", email="admin@chere-global.org", role_id=admin_role.id)
+                u.set_password("ChangeMe123!")
+                db.session.add(u)
+                db.session.commit()
                 logger.info("Admin user created.")
-    except Exception as e:
-        logger.exception("Error initializing database: %s", str(e))
+        except Exception:
+            logger.exception("DB bootstrap failed")
 
 
-# Initialize database immediately when wsgi.py is loaded
-initialize_database()
-
+_bootstrap_db()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))

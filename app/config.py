@@ -1,10 +1,6 @@
-
 """Configuration de l'application CHERE (dev / prod / test)."""
 import os
 from dotenv import load_dotenv
-import logging
-
-logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -26,22 +22,29 @@ class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'chere.db')}"
     )
-    logger.info(f"DevelopmentConfig using DB: {SQLALCHEMY_DATABASE_URI}")
 
 
 class ProductionConfig(BaseConfig):
-    DEBUG = True  # Still temporarily enabled for troubleshooting
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-    logger.info(f"ProductionConfig raw DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
+    DEBUG = False
 
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgresql://"):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgresql://", "postgresql+psycopg2://", 1)
-    logger.info(f"ProductionConfig final DB URI: {SQLALCHEMY_DATABASE_URI}")
+    @classmethod
+    def _get_db_uri(cls):
+        uri = os.environ.get("DATABASE_URL", "")
+        if uri.startswith("postgresql://"):
+            uri = uri.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return uri
 
-    # Important: do not raise at import time; validate when app initializes or on first use.
-    # This prevents local runs that don't use ProductionConfig from crashing.
+    SQLALCHEMY_DATABASE_URI = property(lambda self: ProductionConfig._get_db_uri())
+
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
+
+
+# Resolve SQLALCHEMY_DATABASE_URI at instantiation time for ProductionConfig
+_prod_uri = os.environ.get("DATABASE_URL", "")
+if _prod_uri.startswith("postgresql://"):
+    _prod_uri = _prod_uri.replace("postgresql://", "postgresql+psycopg2://", 1)
+ProductionConfig.SQLALCHEMY_DATABASE_URI = _prod_uri
 
 
 class TestingConfig(BaseConfig):

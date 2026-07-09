@@ -11,13 +11,11 @@ def create_app(config_name="development"):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
-    # --- Initialisation des extensions ---
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    # --- Enregistrement des Blueprints ---
     from app.blueprints.home import home_bp
     from app.blueprints.about import about_bp
     from app.blueprints.services import services_bp
@@ -44,7 +42,6 @@ def create_app(config_name="development"):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
-    # --- Gestion des erreurs ---
     @app.errorhandler(404)
     def not_found(e):
         return render_template("errors/404.html"), 404
@@ -53,7 +50,6 @@ def create_app(config_name="development"):
     def server_error(e):
         return render_template("errors/500.html"), 500
 
-    # --- Injecte des variables globales dans tous les templates ---
     @app.context_processor
     def inject_globals():
         from datetime import datetime
@@ -66,13 +62,9 @@ def create_app(config_name="development"):
     return app
 
 
-from app.models import User  # noqa: E402  (nécessaire pour user_loader)
+from app.models import User  # noqa: E402
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-# Create a default app instance for gunicorn app:app
-app = create_app()
