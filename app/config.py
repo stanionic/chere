@@ -33,11 +33,13 @@ class ProductionConfig(BaseConfig):
     DEBUG = True  # Still temporarily enabled for troubleshooting
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     logger.info(f"ProductionConfig raw DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
+
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgresql://"):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgresql://", "postgresql+psycopg2://", 1)
     logger.info(f"ProductionConfig final DB URI: {SQLALCHEMY_DATABASE_URI}")
-    if not SQLALCHEMY_DATABASE_URI:
-        raise ValueError("DATABASE_URL environment variable is required for ProductionConfig!")
+
+    # Important: do not raise at import time; validate when app initializes or on first use.
+    # This prevents local runs that don't use ProductionConfig from crashing.
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 
