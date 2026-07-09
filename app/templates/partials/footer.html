@@ -1,0 +1,59 @@
+<footer class="footer-chere">
+  <div class="container">
+    <div class="row gy-4">
+      <div class="col-lg-4">
+        <h5 class="text-white mb-3 d-flex align-items-center">
+          <img src="{{ url_for('static', filename='img/logo-nav.png') }}" alt="CHERE" class="footer-logo me-2">
+          CHERE
+        </h5>
+        <p class="text-muted-soft small">
+          Community • Humanity • Empowerment • Resources • Environment.<br>
+          Une entreprise sociale internationale au service de l'innovation,
+          des énergies renouvelables et de l'action humanitaire — partout dans le monde.
+        </p>
+        <div class="d-flex gap-2 mt-3">
+          <a href="https://www.facebook.com/chereglobal" target="_blank" rel="noopener" class="footer-icon" aria-label="Facebook" title="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="https://www.instagram.com/chereglobal" target="_blank" rel="noopener" class="footer-icon" aria-label="Instagram" title="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="https://www.youtube.com/@chereglobal" target="_blank" rel="noopener" class="footer-icon" aria-label="YouTube" title="YouTube"><i class="bi bi-youtube"></i></a>
+          <a href="https://wa.me/10000000000" target="_blank" rel="noopener" class="footer-icon" aria-label="WhatsApp" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-6">
+        <h6 class="text-white mb-3">Navigation</h6>
+        <ul class="list-unstyled small">
+          <li class="mb-2"><a href="{{ url_for('about.index') }}"><i class="bi bi-chevron-right me-1"></i>À propos</a></li>
+          <li class="mb-2"><a href="{{ url_for('services.index') }}"><i class="bi bi-chevron-right me-1"></i>Secteurs</a></li>
+          <li class="mb-2"><a href="{{ url_for('projects.index') }}"><i class="bi bi-chevron-right me-1"></i>Projets</a></li>
+          <li class="mb-2"><a href="{{ url_for('partners.index') }}"><i class="bi bi-chevron-right me-1"></i>Partenaires</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-2 col-6">
+        <h6 class="text-white mb-3">Piliers</h6>
+        <ul class="list-unstyled small">
+          <li class="mb-2"><a href="{{ url_for('innovation.index') }}"><i class="bi bi-cpu me-1"></i>Innovation</a></li>
+          <li class="mb-2"><a href="{{ url_for('renewable.index') }}"><i class="bi bi-lightning-charge me-1"></i>Énergie</a></li>
+          <li class="mb-2"><a href="{{ url_for('humanitarian.index') }}"><i class="bi bi-heart me-1"></i>Humanitaire</a></li>
+          <li class="mb-2"><a href="{{ url_for('blog.index') }}"><i class="bi bi-journal-text me-1"></i>Blog</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-4">
+        <h6 class="text-white mb-3">Newsletter</h6>
+        <p class="small text-muted-soft">Recevez les dernières actualités de CHERE dans le monde.</p>
+        <form action="{{ url_for('contact.newsletter') }}" method="post" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="email" name="email" required class="form-control rounded-pill" placeholder="Votre email">
+          <button class="btn btn-gold rounded-pill px-3"><i class="bi bi-send"></i></button>
+        </form>
+      </div>
+    </div>
+
+    <hr class="border-secondary my-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between small text-muted-soft">
+      <span>&copy; {{ current_year }} CHERE — Tous droits réservés.</span>
+      <span>Conçu pour un impact mondial 🌍</span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <i class="bi bi-cpu floating-icon" style="top:15%; left:8%; font-size:2rem;"></i>
+  <i class="bi bi-lightning-charge floating-icon" style="top:65%; left:15%; font-size:2.4rem; animation-delay:1s;"></i>
+  <i class="bi bi-heart floating-icon" style="top:25%; right:10%; font-size:2.2rem; animation-delay:2s;"></i>
+  <i class="bi bi-droplet floating-icon" style="top:70%; right:14%; font-size:1.8rem; animation-delay:1.5s;"></i>
+
+  <div class="container position-relative">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6">
+        <span class="badge-pill text-white d-inline-block mb-3">
+          <i class="bi bi-stars me-1"></i> Une entreprise sociale internationale
+        </span>
+        <h1 class="display-4 fw-bold text-white mb-3">
+          Transformer le monde par l'<span style="color:var(--gold-light)">innovation</span>,
+          l'<span style="color:var(--gold-light)">énergie</span> et l'<span style="color:var(--gold-light)">humanité</span>.
+        </h1>
+        <p class="lead text-white-50 mb-4">
+          CHERE — Community • Humanity • Empowerment • Resources • Environment.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('about.index') }}" class="btn btn-gold btn-lg">
+            <i class="bi bi-compass me-2"></i>Explore CHERE
+          </a>
+          <a href="{{ url_for('projects.index') }}" class="btn btn-outline-light btn-lg rounded-pill">
+            <i class="bi bi-geo-alt me-2"></i>Nos projets
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center">
+        <img src="{{ url_for('static', filename='img/illustrations/hero-global.svg') }}" alt="Réseau mondial CHERE" class="illustration">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / VISION / VALEURS ============ -->
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Notre raison d'être</span>
+      <h2 class="mt-2">Mission • Vision • Valeurs</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-bullseye"></i></div>
+          <h5>Mission</h5>
+          <p class="text-muted-soft small">Créer un impact durable à travers l'innovation, l'énergie propre et la solidarité.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge gold mx-auto"><i class="bi bi-eye"></i></div>
+          <h5>Vision</h5>
+          <p class="text-muted-soft small">Un monde connecté, résilient et équitable pour toutes les communautés.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-gem"></i></div>
+          <h5>Valeurs</h5>
+          <p class="text-muted-soft small">Intégrité, innovation, inclusion et impact mesurable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATISTIQUES ANIMÉES ============ -->
+<section class="section-sm bg-soft">
+  <div class="container">
+    <div class="row text-center g-4">
+      {% for s in stats %}
+      <div class="col-6 col-md-3">
+        <i class="bi {{ s.icon or 'bi-graph-up-arrow' }} fs-3 mb-2 d-block" style="color:var(--emerald)"></i>
+        <div class="stat-number js-counter" data-target="{{ s.value }}">0</div>
+        <div class="small text-muted-soft">{{ s.label }}{{ s.suffix }}</div>
+      </div>
+      {% else %}
+      {% for label, icon, val in [("Countries", "bi-flag", 45), ("Projects", "bi-kanban", 120),
+                                    ("Communities", "bi-people", 300), ("Volunteers", "bi-person-heart", 5000)] %}
+      <div class="col-6 col-md-3">
+        <i class="bi {{ icon }} fs-3 mb-2 d-block" style="color:var(--emerald)"></i>
+        <div class="stat-number js-counter" data-target="{{ val }}">0</div>
+        <div class="small text-muted-soft">{{ label }}</div>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ LES 3 PILIERS ============ -->
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Ce qui nous définit</span>
+      <h2 class="mt-2">Les 3 piliers de CHERE</h2>
+    </div>
+
+    <!-- Innovation -->
+    <div class="mb-5">
+      <h4 class="mb-3"><i class="bi bi-cpu me-2" style="color:var(--royal-blue)"></i>Innovation</h4>
+      <div class="row g-3">
+        {% for label, icon in [("IA","bi-robot"),("Cloud","bi-cloud"),("R&D","bi-flask"),
+                                 ("IoT","bi-broadcast"),("Blockchain","bi-link-45deg"),
+                                 ("Cybersécurité","bi-shield-lock"),("Big Data","bi-bar-chart"),
+                                 ("Villes intelligentes","bi-building")] %}
+        <div class="col-6 col-md-3 col-lg-3">
+          <div class="icon-chip"><i class="bi {{ icon }}"></i><span>{{ label }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-3"><a href="{{ url_for('innovation.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Innovation</a></div>
+    </div>
+
+    <!-- Énergies renouvelables -->
+    <div class="mb-5">
+      <h4 class="mb-3"><i class="bi bi-lightning-charge me-2" style="color:var(--emerald)"></i>Énergies renouvelables</h4>
+      <div class="row g-3">
+        {% for label, icon in [("Solaire","bi-sun"),("Éolien","bi-wind"),("Hydroélectrique","bi-droplet"),
+                                 ("Hydrogène vert","bi-fire"),("Stockage","bi-battery-charging"),
+                                 ("Mobilité électrique","bi-ev-front"),("Mini-réseaux","bi-diagram-3"),
+                                 ("Villes vertes","bi-tree")] %}
+        <div class="col-6 col-md-3 col-lg-3">
+          <div class="icon-chip"><i class="bi {{ icon }}"></i><span>{{ label }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-3"><a href="{{ url_for('renewable.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Énergie</a></div>
+    </div>
+
+    <!-- Humanitaire -->
+    <div>
+      <h4 class="mb-3"><i class="bi bi-heart me-2" style="color:var(--gold)"></i>Humanitaire</h4>
+      <div class="row g-3">
+        {% for label, icon in [("Santé","bi-heart-pulse"),("Éducation","bi-mortarboard"),("Eau","bi-droplet-half"),
+                                 ("Urgence","bi-life-preserver"),("Femmes","bi-gender-female"),
+                                 ("Enfants","bi-emoji-smile"),("Réfugiés","bi-house-heart"),
+                                 ("Droits humains","bi-hand-thumbs-up")] %}
+        <div class="col-6 col-md-3 col-lg-3">
+          <div class="icon-chip"><i class="bi {{ icon }}"></i><span>{{ label }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-3"><a href="{{ url_for('humanitarian.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Humanitaire</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NOS SECTEURS ============ -->
+<section class="section bg-soft">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Domaines d'intervention</span>
+      <h2 class="mt-2">Nos secteurs</h2>
+    </div>
+    <div class="row g-4">
+      {% set default_sectors = [
+        ("Agriculture","bi-flower1"), ("Tourisme","bi-airplane"), ("Éducation","bi-mortarboard"),
+        ("Business","bi-briefcase"), ("Technologie","bi-cpu"), ("Santé","bi-heart-pulse"),
+        ("Énergie renouvelable","bi-lightning-charge"), ("Environnement","bi-tree"),
+        ("Humanitaire","bi-hand-holding-heart"), ("Construction","bi-building"),
+        ("Finance","bi-cash-coin"), ("Transport","bi-truck")
+      ] %}
+      {% if sectors %}
+        {% for s in sectors %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card-glass p-4 text-center">
+            <div class="sector-icon"><i class="bi {{ s.icon }}"></i></div>
+            <h6>{{ s.name }}</h6>
+            <p class="small text-muted-soft mb-2">{{ s.short_description }}</p>
+            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">En savoir plus</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for name, icon in default_sectors %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card-glass p-4 text-center">
+            <div class="sector-icon"><i class="bi {{ icon }}"></i></div>
+            <h6>{{ name }}</h6>
+            <p class="small text-muted-soft mb-2">Solutions durables et innovantes déployées à l'échelle mondiale.</p>
+            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">En savoir plus</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ CARTE MONDIALE ============ -->
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Présence mondiale</span>
+      <h2 class="mt-2">CHERE intervient partout dans le monde</h2>
+    </div>
+    <div id="world-map"></div>
+  </div>
+</section>
+
+<!-- ============ FUTURE PROJECTS ============ -->
+<section class="section bg-soft">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Ce qui arrive</span>
+      <h2 class="mt-2">Coming Soon</h2>
+    </div>
+    <div class="row g-4">
+      {% for p in coming_soon %}
+      <div class="col-md-4">
+        <div class="card-glass p-4">
+          <div class="icon-badge"><i class="bi bi-hourglass-split"></i></div>
+          <h5>{{ p.title }}</h5>
+          <p class="small text-muted-soft">{{ p.summary }}</p>
+          <span class="badge rounded-pill" style="background:var(--gold); color:var(--elegant-black);">{{ p.country }}</span>
+        </div>
+      </div>
+      {% else %}
+      {% for title, country in [("Solar Mini-Grid Network","Multi-pays"), ("Digital Skills Academy","Global"), ("Climate Resilience Hub","Multi-continent")] %}
+      <div class="col-md-4">
+        <div class="card-glass p-4">
+          <div class="icon-badge"><i class="bi bi-hourglass-split"></i></div>
+          <h5>{{ title }}</h5>
+          <p class="small text-muted-soft">Un nouveau projet CHERE en préparation, porteur d'impact durable.</p>
+          <span class="badge rounded-pill" style="background:var(--gold); color:var(--elegant-black);">{{ country }}</span>
+        </div>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARTENAIRES ============ -->
+<section class="section-sm">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="eyebrow">Ils nous font confiance</span>
+      <h2 class="mt-2">Partenaires</h2>
+    </div>
+    <div class="d-flex flex-wrap justify-content-center align-items-center gap-5 opacity-75">
+      {% if partners %}
+        {% for p in partners %}
+          <div class="text-center small fw-semibold">{{ p.name }}</div>
+        {% endfor %}
+      {% else %}
+        {% for name in ["Nations Unies", "ONG Partenaires", "Universités", "Entreprises", "Institutions", "Banques"] %}
+          <div class="text-center small fw-semibold"><i class="bi bi-building me-1"></i>{{ name }}</div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ BLOG ============ -->
+<section class="section bg-soft">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Actualités</span>
+      <h2 class="mt-2">Depuis le blog CHERE</h2>
+    </div>
+    <div class="row g-4">
+      {% for a in articles %}
+      <div class="col-md-4">
+        <div class="card-glass p-4 h-100">
+          <span class="badge bg-primary-subtle text-primary mb-2">{{ a.category }}</span>
+          <h6>{{ a.title }}</h6>
+          <p class="small text-muted-soft">{{ a.excerpt }}</p>
+          <a href="{{ url_for('blog.detail', slug=a.slug) }}" class="btn btn-outline-chere btn-sm">Lire l'article</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-12 text-center text-muted-soft">
+        <i class="bi bi-journal-richtext fs-1 mb-2 d-block"></i>
+        Les articles seront bientôt publiés depuis l'espace d'administration.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="section text-center text-white" style="background:linear-gradient(135deg,var(--royal-blue),var(--royal-blue-dark));">
+  <div class="container">
+    <h2 class="mb-3">Rejoignez le mouvement CHERE</h2>
+    <p class="lead text-white-50 mb-4">Investisseurs, gouvernements, ONG, entreprises ou particuliers — construisons ensemble un avenir durable.</p>
+    <a href="{{ url_for('contact.index') }}" class="btn btn-gold btn-lg"><i class="bi bi-send me-2"></i>Nous contacter</a>
+  </div>
+</section>
+
+{% endblock %}

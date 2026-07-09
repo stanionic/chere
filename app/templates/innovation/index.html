@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Innovation — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm text-white" style="background:linear-gradient(135deg,var(--royal-blue),var(--royal-blue-dark));">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow" style="color:var(--gold-light)">Pilier n°1</span>
+        <h1 class="mt-2">Innovation</h1>
+        <p class="lead text-white-50" style="max-width:560px;">
+          Nous mobilisons les technologies les plus avancées pour résoudre les défis mondiaux
+          et créer des opportunités partout dans le monde.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/innovation.svg') }}" alt="Innovation technologique" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-3">
+      {% set default_icons = [
+        ("Intelligence Artificielle","bi-robot"), ("Robotique","bi-cpu-fill"), ("Cloud Computing","bi-cloud"),
+        ("Recherche & Développement","bi-flask"), ("Laboratoires d'innovation","bi-lightbulb"),
+        ("IoT","bi-broadcast"), ("Blockchain","bi-link-45deg"), ("Cybersécurité","bi-shield-lock"),
+        ("Big Data","bi-bar-chart-line"), ("Transformation numérique","bi-arrow-repeat"),
+        ("Technologie des drones","bi-airplane-engines"), ("Automatisation","bi-gear"),
+        ("Agriculture intelligente","bi-flower2"), ("Villes intelligentes","bi-building"),
+        ("Santé intelligente","bi-heart-pulse"), ("Incubateurs d'innovation","bi-rocket-takeoff")
+      ] %}
+      {% if icons %}
+        {% for ic in icons %}
+        <div class="col-6 col-md-3">
+          <div class="icon-chip"><i class="bi {{ ic.icon }}"></i><span>{{ ic.label }}</span></div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for label, icon in default_icons %}
+        <div class="col-6 col-md-3">
+          <div class="icon-chip"><i class="bi {{ icon }}"></i><span>{{ label }}</span></div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section bg-soft text-center">
+  <div class="container">
+    <h2 class="mb-3">Envie de collaborer sur un projet d'innovation ?</h2>
+    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Contactez notre équipe</a>
+  </div>
+</section>
+
+{% endblock %}

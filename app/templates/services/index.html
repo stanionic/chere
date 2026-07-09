@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Nos secteurs — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm bg-soft">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow">Domaines d'intervention</span>
+        <h1 class="mt-2">Nos secteurs</h1>
+        <p class="lead text-muted-soft" style="max-width:560px;">
+          CHERE agit dans des secteurs variés pour maximiser son impact à l'échelle mondiale.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/services.svg') }}" alt="Nos secteurs d'activité" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4">
+      {% set default_sectors = [
+        ("Agriculture","bi-flower1"), ("Tourisme","bi-airplane"), ("Éducation","bi-mortarboard"),
+        ("Business","bi-briefcase"), ("Technologie","bi-cpu"), ("Santé","bi-heart-pulse"),
+        ("Énergie renouvelable","bi-lightning-charge"), ("Environnement","bi-tree"),
+        ("Humanitaire","bi-hand-holding-heart"), ("Construction","bi-building"),
+        ("Finance","bi-cash-coin"), ("Transport","bi-truck"), ("Logistique","bi-box-seam"),
+        ("Services numériques","bi-laptop"), ("Sport","bi-trophy"), ("Culture","bi-palette"),
+        ("Recherche","bi-search"), ("Innovation","bi-rocket")
+      ] %}
+      {% if sectors %}
+        {% for s in sectors %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card-glass p-4 text-center">
+            <div class="sector-icon"><i class="bi {{ s.icon }}"></i></div>
+            <h6>{{ s.name }}</h6>
+            <p class="small text-muted-soft mb-2">{{ s.short_description }}</p>
+            <a href="#" class="btn btn-outline-chere btn-sm">Learn More</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for name, icon in default_sectors %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card-glass p-4 text-center">
+            <div class="sector-icon"><i class="bi {{ icon }}"></i></div>
+            <h6>{{ name }}</h6>
+            <p class="small text-muted-soft mb-2">Des solutions concrètes et durables, pensées pour un impact mondial.</p>
+            <a href="{{ url_for('contact.index') }}" class="btn btn-outline-chere btn-sm">Learn More</a>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

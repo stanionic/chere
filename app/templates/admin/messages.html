@@ -1,0 +1,32 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<h4 class="mb-4">Messages de contact</h4>
+<div class="card-glass p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Nom</th><th>Email</th><th>Sujet</th><th>Date</th><th>Statut</th></tr>
+      </thead>
+      <tbody>
+        {% for m in messages %}
+        <tr>
+          <td>{{ m.full_name }}</td>
+          <td>{{ m.email }}</td>
+          <td>{{ m.subject or "—" }}</td>
+          <td class="small text-muted-soft">{{ m.created_at.strftime('%d/%m/%Y %H:%M') if m.created_at else "" }}</td>
+          <td>
+            {% if m.is_read %}
+              <span class="badge bg-success-subtle text-success">Lu</span>
+            {% else %}
+              <span class="badge bg-warning-subtle text-warning">Non lu</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted-soft py-4">Aucun message.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

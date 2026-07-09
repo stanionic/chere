@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}À propos — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm bg-soft">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow">Qui sommes-nous</span>
+        <h1 class="mt-2">À propos de CHERE</h1>
+        <p class="lead text-muted-soft" style="max-width:560px;">
+          Community • Humanity • Empowerment • Resources • Environment — une entreprise sociale
+          internationale qui agit sur tous les continents.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/about.svg') }}" alt="Communauté CHERE" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-globe"></i></div>
+          <h6>Portée mondiale</h6>
+          <p class="small text-muted-soft">Présent sur tous les continents, au service des communautés.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge gold mx-auto"><i class="bi bi-lightbulb"></i></div>
+          <h6>Innovation</h6>
+          <p class="small text-muted-soft">Technologies de pointe au service du bien commun.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-sun"></i></div>
+          <h6>Énergie propre</h6>
+          <p class="small text-muted-soft">Des solutions énergétiques renouvelables et accessibles.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge gold mx-auto"><i class="bi bi-hand-holding-heart"></i></div>
+          <h6>Solidarité</h6>
+          <p class="small text-muted-soft">Une action humanitaire ancrée dans la dignité humaine.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section bg-soft">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Notre impact</span>
+      <h2 class="mt-2">CHERE en chiffres</h2>
+    </div>
+    <div class="row text-center g-4">
+      {% for s in stats %}
+      <div class="col-6 col-md-3">
+        <i class="bi {{ s.icon or 'bi-graph-up-arrow' }} fs-3 mb-2 d-block" style="color:var(--emerald)"></i>
+        <div class="stat-number js-counter" data-target="{{ s.value }}">0</div>
+        <div class="small text-muted-soft">{{ s.label }}{{ s.suffix }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if team %}
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Notre équipe</span>
+      <h2 class="mt-2">Leadership</h2>
+    </div>
+    <div class="row g-4">
+      {% for member in team %}
+      <div class="col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-person-badge"></i></div>
+          <h6>{{ member.full_name }}</h6>
+          <p class="small text-muted-soft">{{ member.role_title }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

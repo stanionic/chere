@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Partenaires — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm bg-soft">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow">Ensemble, plus loin</span>
+        <h1 class="mt-2">Nos partenaires</h1>
+        <p class="lead text-muted-soft" style="max-width:560px;">
+          CHERE collabore avec des institutions internationales, des ONG, des universités,
+          des entreprises et des banques du monde entier.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/partners.svg') }}" alt="Partenaires CHERE" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4">
+      {% for p in partners %}
+      <div class="col-6 col-md-3">
+        <div class="card-glass p-4 text-center">
+          <div class="icon-badge mx-auto"><i class="bi bi-building"></i></div>
+          <h6>{{ p.name }}</h6>
+          <span class="small text-muted-soft">{{ p.category }}</span>
+        </div>
+      </div>
+      {% else %}
+        {% for name, cat, icon in [
+          ("Nations Unies","Institution","bi-globe"), ("ONG Internationales","ONG","bi-hand-holding-heart"),
+          ("Universités partenaires","Université","bi-mortarboard"), ("Entreprises privées","Entreprise","bi-briefcase"),
+          ("Institutions publiques","Institution","bi-bank"), ("Banques de développement","Banque","bi-cash-coin")
+        ] %}
+        <div class="col-6 col-md-3">
+          <div class="card-glass p-4 text-center">
+            <div class="icon-badge mx-auto"><i class="bi {{ icon }}"></i></div>
+            <h6>{{ name }}</h6>
+            <span class="small text-muted-soft">{{ cat }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section bg-soft text-center">
+  <div class="container">
+    <h2 class="mb-3">Devenir partenaire de CHERE</h2>
+    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Nous contacter</a>
+  </div>
+</section>
+
+{% endblock %}

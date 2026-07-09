@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm bg-soft">
+  <div class="container">
+    <a href="{{ url_for('blog.index') }}" class="text-muted-soft small"><i class="bi bi-arrow-left me-1"></i>Retour au blog</a>
+    <span class="badge bg-primary-subtle text-primary d-inline-block mt-3">{{ article.category }}</span>
+    <h1 class="mt-2">{{ article.title }}</h1>
+    <p class="text-muted-soft small">
+      <i class="bi bi-calendar3 me-1"></i>{{ article.published_at.strftime('%d %B %Y') if article.published_at else "" }}
+      {% if article.author %} • <i class="bi bi-person me-1"></i>{{ article.author.full_name }}{% endif %}
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="card-glass p-4 p-md-5" style="max-width:860px; margin:0 auto;">
+      {{ article.content | safe }}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

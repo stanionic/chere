@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+<defs>
+  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#1446a0"/>
+    <stop offset="1" stop-color="#0d2f6e"/>
+  </linearGradient>
+  <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f2c94c"/>
+    <stop offset="1" stop-color="#d4a017"/>
+  </linearGradient>
+  <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#0e9f6e"/>
+    <stop offset="1" stop-color="#0b7355"/>
+  </linearGradient>
+</defs>
+<path d="M300 40C400 40 520 90 550 210C580 330 520 430 420 490C320 550 180 560 100 480C20 400 20 260 80 170C140 80 200 40 300 40Z" fill="url(#g1)" opacity="0.08"/>
+<path d="M300 60C395 60 500 105 535 210C570 315 520 415 425 475C330 535 195 545 115 470C35 395 35 260 95 175C155 90 205 60 300 60Z" fill="url(#g1)" opacity="1" />
+<circle cx="300" cy="300" r="150" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+<ellipse cx="300" cy="300" rx="150" ry="60" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.45"/>
+<ellipse cx="300" cy="300" rx="150" ry="60" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.45" transform="rotate(60 300 300)"/>
+<ellipse cx="300" cy="300" rx="150" ry="60" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.45" transform="rotate(120 300 300)"/>
+<circle cx="300" cy="150" r="10" fill="#f2c94c"/>
+<circle cx="430" cy="255" r="8" fill="#ffffff"/>
+<circle cx="410" cy="410" r="9" fill="#f2c94c"/>
+<circle cx="230" cy="440" r="7" fill="#ffffff"/>
+<circle cx="165" cy="330" r="8" fill="#f2c94c"/>
+<circle cx="190" cy="195" r="7" fill="#ffffff"/>
+<circle cx="300" cy="300" r="46" fill="#ffffff" opacity="0.95"/>
+<path d="M300 268a32 32 0 100 64 32 32 0 000-64Zm0 6c4 0 9 6 12 16h-24c3-10 8-16 12-16Zm-15 8c-2 4-4 9-4.5 15H266c1-6 4-11 9-15Zm30 0c5 4 8 9 9 15h-14.5c-.5-6-2.5-11-4.5-15ZM266 300h10c0-6 1-11 3-16h-9a26 26 0 00-4 16Zm58 0a26 26 0 00-4-16h-9c2 5 3 10 3 16h10Zm-58 6a26 26 0 004 16h9c-2-5-3-10-3-16h-10Zm58 0h-10c0 6-1 11-3 16h9a26 26 0 004-16Zm-43 22c3 10 8 16 12 16s9-6 12-16h-24Z" fill="#1446a0"/>
+
+</svg>

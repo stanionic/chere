@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Humanitaire — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm" style="background:linear-gradient(135deg,var(--gold),#b8850f); color:var(--elegant-black);">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow" style="color:var(--royal-blue-dark)">Pilier n°3</span>
+        <h1 class="mt-2">Humanitaire</h1>
+        <p class="lead" style="max-width:560px; opacity:.85;">
+          Nous répondons aux besoins essentiels des communautés vulnérables partout dans le monde,
+          avec dignité et efficacité.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/humanitarian.svg') }}" alt="Action humanitaire" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-3">
+      {% set default_icons = [
+        ("Santé","bi-heart-pulse"), ("Éducation","bi-mortarboard"), ("Alimentation","bi-basket2"),
+        ("Eau","bi-droplet-half"), ("Abri","bi-house-door"), ("Aide d'urgence","bi-life-preserver"),
+        ("Réponse d'urgence","bi-truck-front"), ("Jeunesse","bi-emoji-smile"), ("Femmes","bi-gender-female"),
+        ("Enfants","bi-balloon-heart"), ("Réfugiés","bi-house-heart"), ("Développement communautaire","bi-people"),
+        ("Réduction de la pauvreté","bi-graph-down-arrow"), ("Bénévolat","bi-hand-thumbs-up"),
+        ("ONG partenaires","bi-diagram-2"), ("Droits humains","bi-shield-check"), ("Inclusion","bi-universal-access")
+      ] %}
+      {% if icons %}
+        {% for ic in icons %}
+        <div class="col-6 col-md-3">
+          <div class="icon-chip"><i class="bi {{ ic.icon }}"></i><span>{{ ic.label }}</span></div>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for label, icon in default_icons %}
+        <div class="col-6 col-md-3">
+          <div class="icon-chip"><i class="bi {{ icon }}"></i><span>{{ label }}</span></div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section bg-soft text-center">
+  <div class="container">
+    <h2 class="mb-3">Devenez partenaire ou bénévole CHERE</h2>
+    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Rejoignez-nous</a>
+  </div>
+</section>
+
+{% endblock %}

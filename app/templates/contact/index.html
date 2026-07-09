@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Contact — {{ site_name }}{% endblock %}
+{% block content %}
+
+<section class="section-sm bg-soft">
+  <div class="container">
+    <div class="page-hero-flex">
+      <div class="page-hero-text text-center text-lg-start">
+        <span class="eyebrow">Parlons-en</span>
+        <h1 class="mt-2">Contactez CHERE</h1>
+        <p class="lead text-muted-soft" style="max-width:560px;">
+          Une question, un projet, un partenariat ? Notre équipe internationale vous répond rapidement.
+        </p>
+      </div>
+      <div class="page-hero-art">
+        <img src="{{ url_for('static', filename='img/illustrations/contact.svg') }}" alt="Contactez CHERE" class="illustration illustration-sm">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-5">
+        <div class="d-flex align-items-start gap-3 mb-4">
+          <div class="icon-badge"><i class="bi bi-envelope"></i></div>
+          <div>
+            <h6 class="mb-1">Email</h6>
+            <span class="text-muted-soft small">contact@chere-global.org</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 mb-4">
+          <div class="icon-badge gold"><i class="bi bi-whatsapp"></i></div>
+          <div>
+            <h6 class="mb-1">WhatsApp</h6>
+            <span class="text-muted-soft small">+1 (000) 000-0000</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-start gap-3 mb-4">
+          <div class="icon-badge"><i class="bi bi-geo-alt"></i></div>
+          <div>
+            <h6 class="mb-1">Siège international</h6>
+            <span class="text-muted-soft small">Bureaux répartis sur plusieurs continents</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <a href="#" class="footer-icon" style="background:var(--bg-soft); color:var(--royal-blue);"><i class="bi bi-linkedin"></i></a>
+          <a href="#" class="footer-icon" style="background:var(--bg-soft); color:var(--royal-blue);"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="footer-icon" style="background:var(--bg-soft); color:var(--royal-blue);"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="footer-icon" style="background:var(--bg-soft); color:var(--royal-blue);"><i class="bi bi-twitter-x"></i></a>
+          <a href="#" class="footer-icon" style="background:var(--bg-soft); color:var(--royal-blue);"><i class="bi bi-youtube"></i></a>
+        </div>
+
+        <div class="qr-card mt-4 d-inline-block">
+          <img src="{{ url_for('static', filename='img/qr/chere-app-qr.png') }}" alt="QR code CHERE" width="150" height="150">
+          <p class="small text-muted-soft mt-3 mb-0"><i class="bi bi-qr-code-scan me-1"></i>Scannez pour ouvrir<br>l'app CHERE sur mobile</p>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card-glass p-4 p-md-5">
+          <form method="post" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="row g-3">
+              <div class="col-md-6">
+                {{ form.full_name.label(class="form-label small fw-semibold") }}
+                {{ form.full_name(class="form-control rounded-chere") }}
+              </div>
+              <div class="col-md-6">
+                {{ form.email.label(class="form-label small fw-semibold") }}
+                {{ form.email(class="form-control rounded-chere") }}
+              </div>
+              <div class="col-12">
+                {{ form.subject.label(class="form-label small fw-semibold") }}
+                {{ form.subject(class="form-control rounded-chere") }}
+              </div>
+              <div class="col-12">
+                {{ form.body.label(class="form-label small fw-semibold") }}
+                {{ form.body(class="form-control rounded-chere", rows=5) }}
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-chere w-100"><i class="bi bi-send me-2"></i>Envoyer le message</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
