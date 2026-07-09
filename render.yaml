@@ -12,5 +12,7 @@ services:
         value: wsgi.py
       - key: FLASK_ENV
         value: development
+      - key: FLASK_CONFIG
+        value: development
       - key: SECRET_KEY
         generateValue: true
