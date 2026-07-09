@@ -3,6 +3,11 @@ from app.blueprints.home import home_bp
 from app.models import Statistic, Sector, Project, Partner, Article, PillarIcon
 
 
+@home_bp.route("/health")
+def health_check():
+    return "OK"
+
+
 @home_bp.route("/")
 def index():
     stats = Statistic.query.order_by(Statistic.order).all()
