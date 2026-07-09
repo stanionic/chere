@@ -12,11 +12,13 @@ def health_check():
 def test_route():
     import sys
     import os
+    from flask import current_app
     info = [
         "CHERE Test Route",
         f"Python: {sys.version}",
         f"FLASK_CONFIG: {os.getenv('FLASK_CONFIG', 'not set')}",
-        f"DATABASE_URL: {'set' if os.getenv('DATABASE_URL') else 'not set'}",
+        f"DATABASE_URL env var: {'set' if os.getenv('DATABASE_URL') else 'not set'}",
+        f"SQLALCHEMY_DATABASE_URI: {current_app.config.get('SQLALCHEMY_DATABASE_URI', 'not set')}",
     ]
     return "<br>".join(info)
 

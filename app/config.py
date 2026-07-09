@@ -1,6 +1,10 @@
+
 """Configuration de l'application CHERE (dev / prod / test)."""
 import os
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -22,14 +26,18 @@ class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'chere.db')}"
     )
+    logger.info(f"DevelopmentConfig using DB: {SQLALCHEMY_DATABASE_URI}")
 
 
 class ProductionConfig(BaseConfig):
-    DEBUG = True  # Temporarily enabled for troubleshooting
-    # Handle Render's PostgreSQL URL, which starts with postgresql://
+    DEBUG = True  # Still temporarily enabled for troubleshooting
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    logger.info(f"ProductionConfig raw DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgresql://"):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgresql://", "postgresql+psycopg2://", 1)
+    logger.info(f"ProductionConfig final DB URI: {SQLALCHEMY_DATABASE_URI}")
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("DATABASE_URL environment variable is required for ProductionConfig!")
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
 
