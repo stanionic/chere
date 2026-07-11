@@ -6,6 +6,10 @@
   <title>{% block title %}{{ site_name }} — {{ site_tagline }}{% endblock %}</title>
   <meta name="description" content="{% block description %}CHERE est une entreprise sociale internationale dédiée à l'innovation, aux énergies renouvelables et à l'action humanitaire à travers le monde.{% endblock %}">
   <meta name="theme-color" content="#1446a0">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- Favicons -->
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
@@ -62,6 +66,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- CHERE JS -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/install.js') }}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

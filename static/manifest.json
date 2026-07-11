@@ -1,0 +1,14 @@
+{
+  "name": "CHERE",
+  "short_name": "CHERE",
+  "description": "Community • Humanity • Empowerment • Resources • Environment",
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#1446a0",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/static/img/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/img/favicon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
