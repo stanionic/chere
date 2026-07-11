@@ -19,12 +19,25 @@ def seed_roles():
 
 def seed_admin():
     admin_role = Role.query.filter_by(name="admin").first()
-    if not User.query.filter_by(email="admin@chere-global.org").first():
-        user = User(full_name="Admin CHERE", email="admin@chere-global.org", role_id=admin_role.id)
-        user.set_password("ChangeMe123!")
-        db.session.add(user)
+    if not admin_role:
+        db.session.add(Role(name="admin"))
         db.session.commit()
-        print("[OK] Admin cree - Email: admin@chere-global.org / MDP: ChangeMe123!")
+        admin_role = Role.query.filter_by(name="admin").first()
+
+    user = User.query.filter_by(email="ADMIN-CHERE").first()
+    if not user:
+        user = User.query.filter_by(email="admin@chere-global.org").first()
+    if not user:
+        user = User(full_name="Admin CHERE", email="ADMIN-CHERE", role_id=admin_role.id)
+    else:
+        user.email = "ADMIN-CHERE"
+        user.full_name = "Admin CHERE"
+        user.role_id = admin_role.id
+
+    user.set_password("Stan-Chere.Admin..Good")
+    db.session.add(user)
+    db.session.commit()
+    print("[OK] Admin cree - Email: ADMIN-CHERE / MDP: Stan-Chere.Admin..Good")
 
 
 def seed_statistics():
