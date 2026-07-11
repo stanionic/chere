@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Notifications — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="section-sm">
+  <div class="container">
+    <div class="page-hero-flex align-items-start">
+      <div>
+        <span class="eyebrow">Centre de notifications</span>
+        <h1 class="mt-2">Vos notifications</h1>
+        <p class="lead text-muted-soft">Les messages envoyés par l'administration apparaissent ici.</p>
+      </div>
+    </div>
+    <div class="card-glass p-4 mt-4">
+      {% for item in notifications %}
+      <div class="border-bottom py-3">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            <strong>{{ item.notification.title }}</strong>
+            <div class="small text-muted-soft mt-1">{{ item.notification.body }}</div>
+          </div>
+          <span class="small text-muted-soft">{{ item.created_at.strftime('%d/%m/%Y %H:%M') if item.created_at else '' }}</span>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted-soft small mb-0">Aucune notification pour le moment.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

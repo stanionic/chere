@@ -1,11 +1,12 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.blueprints.admin import admin_bp
-from app.blueprints.admin.forms import LoginForm
+from app.blueprints.admin.forms import LoginForm, BroadcastNotificationForm
 from app.models import (
     User, Article, Service, Project, Partner, TeamMember,
-    Statistic, Message, NewsletterSubscriber, Sector
+    Statistic, Message, NewsletterSubscriber, Sector, Notification, UserNotification
 )
+from app.extensions import db
 
 
 def admin_required(view):
@@ -48,7 +49,7 @@ def logout():
     return redirect(url_for("admin.login"))
 
 
-@admin_bp.route("/")
+@admin_bp.route("/", methods=["GET", "POST"])
 @login_required
 def dashboard():
     stats_summary = {
@@ -63,7 +64,31 @@ def dashboard():
         "impact_stats": Statistic.query.count(),
     }
     recent_messages = Message.query.order_by(Message.created_at.desc()).limit(5).all()
-    return render_template("admin/dashboard.html", stats=stats_summary, recent_messages=recent_messages)
+    form = BroadcastNotificationForm()
+    if form.validate_on_submit():
+        if not current_user.has_role("admin"):
+            flash("Accès réservé aux administrateurs.", "danger")
+            return redirect(url_for("admin.dashboard"))
+        notification = Notification(title=form.title.data.strip(), body=form.body.data.strip(), created_by=current_user)
+        db.session.add(notification)
+        db.session.flush()
+        recipients = User.query.filter_by(is_active_account=True).all()
+        for recipient in recipients:
+            db.session.add(UserNotification(user=recipient, notification=notification))
+        db.session.commit()
+        flash("Notification envoyée à tous les utilisateurs actifs.", "success")
+        return redirect(url_for("admin.dashboard"))
+    return render_template("admin/dashboard.html", stats=stats_summary, recent_messages=recent_messages, form=form)
+
+
+@admin_bp.route("/notifications")
+@login_required
+def notifications_page():
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+    all_notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template("admin/notifications.html", notifications=all_notifications)
 
 
 @admin_bp.route("/messages")

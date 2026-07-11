@@ -29,6 +29,12 @@ class User(UserMixin, db.Model):
     is_active_account = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
+    notifications = db.relationship(
+        "UserNotification",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -43,8 +49,39 @@ class User(UserMixin, db.Model):
     def has_role(self, role_name):
         return self.role and self.role.name == role_name
 
+    def unread_notification_count(self):
+        return self.notifications.filter_by(is_read=False).count()
+
     def __repr__(self):
         return f"<User {self.email}>"
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(160), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+    recipients = db.relationship(
+        "UserNotification",
+        back_populates="notification",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+
+
+class UserNotification(db.Model):
+    __tablename__ = "user_notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    notification_id = db.Column(db.Integer, db.ForeignKey("notifications.id"), nullable=False, index=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read_at = db.Column(db.DateTime)
+    user = db.relationship("User", back_populates="notifications")
+    notification = db.relationship("Notification", back_populates="recipients")
 
 
 class Sector(db.Model):

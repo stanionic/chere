@@ -1,6 +1,8 @@
+from datetime import datetime
 from flask import render_template, current_app
+from flask_login import login_required, current_user
 from app.blueprints.home import home_bp
-from app.models import Statistic, Sector, Project, Partner, Article, PillarIcon
+from app.models import Statistic, Sector, Project, Partner, Article, PillarIcon, UserNotification
 
 
 @home_bp.route("/health")
@@ -21,6 +23,19 @@ def test_route():
         f"SQLALCHEMY_DATABASE_URI: {current_app.config.get('SQLALCHEMY_DATABASE_URI', 'not set')}",
     ]
     return "<br>".join(info)
+
+
+@home_bp.route("/notifications")
+@login_required
+def notifications():
+    unread_items = current_user.notifications.filter_by(is_read=False).all()
+    for item in unread_items:
+        item.is_read = True
+        item.read_at = datetime.utcnow()
+    from app.extensions import db
+    db.session.commit()
+    user_notifications = current_user.notifications.order_by(UserNotification.created_at.desc()).all()
+    return render_template("notifications.html", notifications=user_notifications)
 
 
 @home_bp.route("/")

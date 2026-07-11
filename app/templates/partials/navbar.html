@@ -16,6 +16,17 @@
         <li class="nav-item"><a class="nav-link" href="{{ url_for('projects.index') }}">Projets</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('blog.index') }}">Blog</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.index') }}">Contact</a></li>
+        {% if current_user.is_authenticated %}
+        <li class="nav-item ms-lg-2">
+          <a class="nav-link position-relative" href="{{ url_for('home.notifications') }}" aria-label="Notifications">
+            <i class="bi bi-bell-fill"></i>
+            {% set unread_count = current_user.notifications.filter_by(is_read=False).count() %}
+            {% if unread_count %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+        {% endif %}
         <li class="nav-item ms-lg-2">
           <button id="theme-toggle" class="theme-toggle" aria-label="Basculer le thème">
             <i class="bi bi-moon-stars-fill"></i>
