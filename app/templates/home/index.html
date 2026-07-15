@@ -296,3 +296,182 @@
 </section>
 
 {% endblock %}
+
+{% if upcoming_events %}
+<!-- ============ EVENTS POPUP ============ -->
+<div id="events-popup" class="events-popup" role="dialog" aria-modal="true" aria-labelledby="popup-title">
+  <div class="events-popup-inner">
+    <div class="events-popup-header">
+      <div>
+        <span class="eyebrow" style="color:var(--gold-light);">À venir</span>
+        <h5 id="popup-title" class="mb-0 text-white">Prochains événements</h5>
+      </div>
+      <button class="events-popup-close" id="closePopup" aria-label="Fermer">&times;</button>
+    </div>
+    <div class="events-popup-body">
+      {% for event in upcoming_events %}
+      <a href="{{ url_for('barista.event_detail', slug=event.slug) }}" class="event-card-mini">
+        <div class="event-card-mini-left">
+          {% if event.event_date %}
+          <div class="event-date-badge">
+            <span class="day">{{ event.event_date.strftime('%d') }}</span>
+            <span class="month">{{ event.event_date.strftime('%b').upper() }}</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="event-card-mini-body">
+          <div class="event-title">{{ event.title }}</div>
+          <div class="event-meta">
+            {% if event.location %}<i class="bi bi-geo-alt"></i> {{ event.location }}{% endif %}
+            {% if event.is_paid %}
+              <span class="event-price">{{ "%.0f"|format(event.price) }} RWF</span>
+            {% else %}
+              <span class="event-free">Gratuit</span>
+            {% endif %}
+          </div>
+        </div>
+        <i class="bi bi-arrow-right event-arrow"></i>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="events-popup-footer">
+      <a href="{{ url_for('barista.index') }}" class="btn btn-gold btn-sm w-100">
+        <i class="bi bi-calendar-event me-1"></i>Voir tous les événements
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+.events-popup {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  z-index: 1055;
+  animation: slideUp .4s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.events-popup.hide {
+  animation: slideDown .3s ease forwards;
+}
+@keyframes slideDown {
+  to { opacity: 0; transform: translateY(30px); }
+}
+.events-popup-inner {
+  background: linear-gradient(135deg, var(--royal-blue, #1a3a6b), #0f2347);
+  border: 1px solid rgba(200,155,60,0.35);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  overflow: hidden;
+}
+.events-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.events-popup-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.events-popup-close:hover { background: rgba(255,255,255,0.2); }
+.events-popup-body { padding: 10px 12px; }
+.event-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: background .2s;
+}
+.event-card-mini:hover { background: rgba(255,255,255,0.07); }
+.event-date-badge {
+  background: var(--gold, #C89B3C);
+  color: #1a1a1a;
+  border-radius: 8px;
+  width: 40px;
+  text-align: center;
+  padding: 4px 0;
+  flex: 0 0 auto;
+}
+.event-date-badge .day { display: block; font-weight: 700; font-size: 16px; line-height: 1.1; }
+.event-date-badge .month { display: block; font-size: 10px; font-weight: 600; letter-spacing: .05em; }
+.event-card-mini-body { flex: 1; min-width: 0; }
+.event-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.event-meta {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.55);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.event-price {
+  background: rgba(200,155,60,0.2);
+  color: var(--gold, #C89B3C);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.event-free {
+  background: rgba(40,167,69,0.2);
+  color: #5cb85c;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.event-arrow { color: rgba(255,255,255,0.3); font-size: 14px; }
+.events-popup-footer { padding: 8px 12px 14px; }
+@media (max-width: 480px) {
+  .events-popup { right: 12px; bottom: 12px; width: calc(100vw - 24px); }
+}
+</style>
+
+<script>
+(function(){
+  const popup = document.getElementById('events-popup');
+  const close = document.getElementById('closePopup');
+  const key = 'chere_events_popup_closed';
+
+  // Don't show if dismissed in this session
+  if (sessionStorage.getItem(key)) {
+    popup.style.display = 'none';
+    return;
+  }
+
+  // Show after 2 seconds
+  popup.style.display = 'none';
+  setTimeout(() => { popup.style.display = 'block'; }, 2000);
+
+  close.addEventListener('click', () => {
+    popup.classList.add('hide');
+    sessionStorage.setItem(key, '1');
+    setTimeout(() => { popup.style.display = 'none'; }, 300);
+  });
+})();
+</script>
+{% endif %}

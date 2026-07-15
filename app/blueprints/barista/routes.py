@@ -282,6 +282,30 @@ def event_registered(event_id):
     return render_template("barista/registered.html", event=event, participant=participant)
 
 
+@barista_bp.route("/api/payment/callback", methods=["POST"])
+def payment_callback():
+    """Webhook MoMo — appelé par MTN lors d'un changement de statut."""
+    data = request.json or {}
+    reference_id = data.get("referenceId")
+
+    if reference_id:
+        transaction = Transaction.query.filter_by(momo_reference=reference_id).first()
+        if transaction:
+            status = data.get("status", "").upper()
+            if status == "SUCCESSFUL":
+                transaction.status = "success"
+                transaction.paid_at = datetime.utcnow()
+                transaction.participant.status = "confirmed"
+                transaction.participant.confirmation_date = datetime.utcnow()
+            elif status == "FAILED":
+                transaction.status = "failed"
+            transaction.response_data = data
+            db.session.commit()
+
+    momo_service.handle_payment_callback(data)
+    return jsonify({"success": True}), 200
+
+
 @barista_bp.route("/card")
 def card():
     """Page de carte pour compatibilité avec l'ancienne URL."""

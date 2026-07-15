@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, current_app
 from flask_login import login_required, current_user
 from app.blueprints.home import home_bp
-from app.models import Statistic, Sector, Project, Partner, Article, PillarIcon, UserNotification
+from app.models import Statistic, Sector, Project, Partner, Article, PillarIcon, UserNotification, Event
 
 
 @home_bp.route("/health")
@@ -51,6 +51,8 @@ def index():
         renewable_icons = PillarIcon.query.filter_by(pillar="renewable").order_by(PillarIcon.order).limit(8).all()
         humanitarian_icons = PillarIcon.query.filter_by(pillar="humanitarian").order_by(PillarIcon.order).limit(8).all()
 
+        upcoming_events = Event.query.filter_by(is_published=True).order_by(Event.event_date.asc()).limit(3).all()
+
         return render_template(
             "home/index.html",
             stats=stats,
@@ -62,6 +64,7 @@ def index():
             innovation_icons=innovation_icons,
             renewable_icons=renewable_icons,
             humanitarian_icons=humanitarian_icons,
+            upcoming_events=upcoming_events,
         )
     except Exception as e:
         current_app.logger.exception("Error loading index route")
