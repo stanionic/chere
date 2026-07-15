@@ -1,7 +1,7 @@
 import os
 import logging
 from app import create_app, db
-from app.models import User, Role
+from app.models import User, Role, Event
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,8 +28,31 @@ def _bootstrap_db():
                 db.session.add(u)
                 db.session.commit()
                 logger.info("Admin user created.")
+            _seed_events()
         except Exception:
             logger.exception("DB bootstrap failed")
+
+
+def _seed_events():
+    from datetime import datetime
+    if Event.query.filter_by(slug="cooking-class").first():
+        return
+    event = Event(
+        title="COOKING CLASS",
+        slug="cooking-class",
+        description="Join our hands-on cooking class and discover the art of preparing delicious meals. Learn techniques from professional chefs in a fun and interactive environment.",
+        summary="Hands-on cooking class with professional chefs.",
+        event_type="workshop",
+        is_paid=True,
+        price=1000.0,
+        currency="RWF",
+        location="CHERE Hub, Kigali",
+        event_date=datetime(2026, 8, 15, 10, 0),
+        is_published=True,
+    )
+    db.session.add(event)
+    db.session.commit()
+    logger.info("COOKING CLASS event seeded.")
 
 
 _bootstrap_db()
