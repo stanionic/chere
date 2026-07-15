@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMINISTRATOR
+  MODERATOR
+  FINANCE
+  SUPPORT
+  MARKETING
+  CONTENT_MANAGER
+  DEVELOPER
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING
+}
+
+enum PaymentMethod {
+  STRIPE
+  MOMO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  SMS
+  IN_APP
+}
+
+model AdminUser {
+  id                       String                  @id @default(cuid())
+  email                    String                  @unique
+  username                 String                  @unique
+  fullName                 String
+  passwordHash             String
+  role                     AdminRole
+  status                   UserStatus              @default(ACTIVE)
+  avatarUrl                String?
+  phone                    String?
+  locale                   String                  @default("en")
+  timezone                 String                  @default("UTC")
+  mustChangePassword       Boolean                 @default(true)
+  twoFactorEnabled         Boolean                 @default(false)
+  failedLoginAttempts      Int                     @default(0)
+  lockedUntil              DateTime?
+  lastLoginAt              DateTime?
+  lastPasswordChangedAt    DateTime?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  accounts                 Account[]
+  sessions                 Session[]
+  auditLogs                AuditLog[]
+  loginHistory             LoginHistory[]
+  notifications            Notification[]
+  internalNotes            InternalNote[]
+  supportAssignments       SupportTicket[]         @relation("AssignedAgent")
+  organizationMemberships  OrganizationMember[]
+  apiKeys                  ApiKey[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  module      String
+  action      String
+  description String
+  roleLinks   RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id         String     @id @default(cuid())
+  role       AdminRole
+  permissionId String
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+}
+
+model AuditLog {
+  id            String    @id @default(cuid())
+  actorId        String?
+  actor          AdminUser? @relation(fields: [actorId], references: [id])
+  action         String
+  entityType     String
+  entityId       String
+  ipAddress      String?
+  browser        String?
+  device         String?
+  previousValue  Json?
+  newValue       Json?
+  createdAt      DateTime  @default(now())
+}
+
+model LoginHistory {
+  id          String    @id @default(cuid())
+  userId       String?
+  user         AdminUser? @relation(fields: [userId], references: [id])
+  username     String
+  success      Boolean
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+}
+
+model Organization {
+  id            String               @id @default(cuid())
+  name          String
+  slug          String               @unique
+  ownerId       String?
+  owner         AdminUser?           @relation(fields: [ownerId], references: [id])
+  billingEmail  String?
+  plan          String               @default("Enterprise")
+  status        UserStatus           @default(ACTIVE)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  members       OrganizationMember[]
+  services      Service[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           AdminUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  services    Service[]
+}
+
+model Service {
+  id               String        @id @default(cuid())
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+  categoryId       String?
+  category         Category?     @relation(fields: [categoryId], references: [id])
+  name             String
+  slug             String        @unique
+  description      String?
+  featured         Boolean       @default(false)
+  visible          Boolean       @default(true)
+  active           Boolean       @default(true)
+  basePrice        Decimal       @db.Decimal(10, 2)
+  currency         String        @default("USD")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  orders           Order[]
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  customerName    String
+  customerEmail   String
+  serviceId       String
+  service         Service       @relation(fields: [serviceId], references: [id])
+  status          OrderStatus   @default(PENDING)
+  total           Decimal       @db.Decimal(10, 2)
+  currency        String        @default("USD")
+  paymentMethod   PaymentMethod
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  payments        Payment[]
+}
+
+model Payment {
+  id               String         @id @default(cuid())
+  orderId          String
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactionRef   String         @unique
+  method           PaymentMethod
+  status           PaymentStatus  @default(PENDING)
+  amount           Decimal        @db.Decimal(10, 2)
+  currency         String         @default("USD")
+  providerResponse Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model SupportTicket {
+  id              String      @id @default(cuid())
+  subject         String
+  requesterName   String
+  requesterEmail  String
+  status          TicketStatus @default(OPEN)
+  priority        String      @default("Medium")
+  assignedAgentId String?
+  assignedAgent   AdminUser?  @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  notes           InternalNote[]
+}
+
+model InternalNote {
+  id         String        @id @default(cuid())
+  body       String
+  authorId   String
+  author     AdminUser     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ticketId    String?
+  ticket      SupportTicket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  title       String
+  body        String
+  channel     NotificationChannel
+  createdById String
+  createdBy   AdminUser            @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now())
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyPrefix   String    @unique
+  hashedKey   String
+  userId      String
+  user        AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}

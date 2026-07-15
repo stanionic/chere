@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <!-- Succès -->
+            <div class="text-center mb-4">
+                <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+                {% if participant.status == 'confirmed' %}
+                    <h1 class="display-5 mt-3 text-success">Inscription confirmée!</h1>
+                    <p class="lead text-muted">Merci pour votre inscription à cet événement.</p>
+                {% else %}
+                    <h1 class="display-5 mt-3 text-warning">Inscription enregistrée</h1>
+                    <p class="lead text-muted">Votre inscription est enregistrée, mais elle n'est pas encore confirmée.</p>
+                {% endif %}
+            </div>
+
+            <!-- Résumé de l'événement et de l'inscription -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Résumé de votre inscription</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Événement</small>
+                            <p class="h6 mb-0"><strong>{{ event.title }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Statut</small>
+                            <p class="mb-0">
+                                {% if participant.status == 'confirmed' %}
+                                    <span class="badge bg-success">Confirmé</span>
+                                {% elif participant.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">En attente de paiement</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ participant.status|capitalize }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Participant</small>
+                            <p class="mb-0"><strong>{{ participant.full_name }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Email</small>
+                            <p class="mb-0"><strong>{{ participant.email }}</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Date de l'événement</small>
+                            <p class="mb-0"><strong>{{ event.event_date.strftime('%d %b %Y à %H:%M') if event.event_date else 'À déterminer' }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">Lieu</small>
+                            <p class="mb-0"><strong>{{ event.location or 'À déterminer' }}</strong></p>
+                        </div>
+                    </div>
+
+                    {% if participant.status == 'confirmed' and event.is_paid %}
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Montant payé</small>
+                                <p class="h6 mb-0 text-success"><strong>{{ event.price }} RWF</strong></p>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Date de paiement</small>
+                                <p class="mb-0"><strong>{{ participant.confirmation_date.strftime('%d %b %Y') if participant.confirmation_date else 'Confirmé' }}</strong></p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Étapes suivantes -->
+            <div class="card shadow-sm mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-arrow-right"></i> Étapes suivantes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">1</span>
+                        </div>
+                        <div>
+                            <strong>Conservez vos informations</strong><br>
+                            <small class="text-muted">Gardez cette page ou notez l'adresse email <strong>{{ participant.email }}</strong> utilisée pour l'inscription.</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">2</span>
+                        </div>
+                        <div>
+                            <strong>Présentez vos détails d'inscription</strong><br>
+                            <small class="text-muted">Votre nom complet et votre email peuvent être demandés à l'accueil de l'événement.</small>
+                        </div>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">3</span>
+                        </div>
+                        <div>
+                            <strong>Arrivez en avance</strong><br>
+                            <small class="text-muted">Présentez-vous 15 minutes avant le début de l'événement</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Questions fréquentes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqOneCollapse">
+                                    <i class="fas fa-edit me-2"></i> Puis-je modifier mes informations?
+                                </button>
+                            </h2>
+                            <div id="faqOneCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Oui, vous pouvez modifier votre inscription en contactant notre équipe support avant la date de l'événement.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwoCollapse">
+                                    <i class="fas fa-times me-2"></i> Puis-je annuler mon inscription?
+                                </button>
+                            </h2>
+                            <div id="faqTwoCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Les annulations sont acceptées jusqu'à 48 heures avant l'événement. Un remboursement sera traité selon nos conditions.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThreeCollapse">
+                                    <i class="fas fa-map-marker-alt me-2"></i> Où se déroule l'événement?
+                                </button>
+                            </h2>
+                            <div id="faqThreeCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    {% if event.location %}
+                                        L'adresse exacte est: <strong>{{ event.location }}</strong>.
+                                    {% else %}
+                                        Le lieu exact sera communiqué sur la page de l'événement lorsqu'il sera confirmé.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <a href="{{ url_for('events.index') }}" class="btn btn-outline-primary btn-lg w-100">
+                        <i class="fas fa-calendar-alt"></i> Voir d'autres événements
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('home.index') }}" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

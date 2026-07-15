@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Paiement - {{ event.title }} - CHERE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Payment Card -->
+            <div class="card shadow-lg border-0">
+                <!-- Header -->
+                <div class="card-header bg-primary text-white py-4">
+                    <h4 class="mb-0">
+                        <i class="bi bi-creditcard"></i>
+                        Finaliser votre inscription
+                    </h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Event Summary -->
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-1">{{ event.title }}</h5>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-person"></i>
+                                    {{ participant.full_name }}
+                                </p>
+                            </div>
+                            <div class="col-auto text-end">
+                                <h4 class="text-primary mb-0">{{ "%.0f"|format(amount) }} RWF</h4>
+                                <small class="text-muted">Montant à payer</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form id="payment-form" class="mb-4">
+                        <div class="mb-4">
+                            <label for="phone" class="form-label fw-bold">
+                                <i class="bi bi-telephone"></i>
+                                Numéro MoMo
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">+250</span>
+                                <input
+                                    type="tel"
+                                    class="form-control"
+                                    id="phone"
+                                    name="phone"
+                                    placeholder="7xx xxx xxx"
+                                    inputmode="numeric"
+                                    required
+                                >
+                            </div>
+                            <small class="form-text text-muted d-block mt-2">
+                                Entrez le numéro MoMo pour recevoir la demande de paiement
+                            </small>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-lightbulb"></i>
+                                Comment ça marche?
+                            </h6>
+                            <ol class="mb-0 small">
+                                <li>Entrez votre numéro MoMo ci-dessus</li>
+                                <li>Cliquez sur "Payer avec MoMo"</li>
+                                <li>Une demande de paiement vous sera envoyée sur votre téléphone</li>
+                                <li>Entrez votre PIN MoMo pour confirmer</li>
+                                <li>Votre inscription sera confirmée automatiquement</li>
+                            </ol>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="loading" style="display: none;" class="text-center mb-4">
+                            <div class="spinner-border text-primary mb-2" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <div class="text-muted">
+                                <p>Demande de paiement en cours...</p>
+                                <small>Vérifiez votre téléphone</small>
+                            </div>
+                        </div>
+
+                        <!-- Success State -->
+                        <div id="success" style="display: none;" class="text-center mb-4">
+                            <div class="mb-3">
+                                <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h5 class="text-success mb-2">Paiement reçu!</h5>
+                            <p class="text-muted mb-3">Votre inscription est confirmée. Vous allez être redirigé...</p>
+                        </div>
+
+                        <!-- Error State -->
+                        <div id="error" style="display: none;" class="alert alert-danger mb-4">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <span id="error-message"></span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button
+                            type="submit"
+                            class="btn btn-primary btn-lg w-100"
+                            id="submit-btn"
+                        >
+                            <i class="bi bi-wallet2"></i>
+                            Payer {{ "%.0f"|format(amount) }} RWF
+                        </button>
+                    </form>
+
+                    <!-- Payment Methods Info -->
+                    <div class="border-top pt-4">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-lock"></i>
+                            Vos informations de paiement sont sécurisées via MoMo
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Link -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('barista.event_detail', slug=event.slug) }}" class="btn btn-link">
+                    <i class="bi bi-arrow-left"></i>
+                    Retour à l'événement
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('payment-form');
+    const phoneInput = document.getElementById('phone');
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingDiv = document.getElementById('loading');
+    const successDiv = document.getElementById('success');
+    const errorDiv = document.getElementById('error');
+    const errorMessage = document.getElementById('error-message');
+    
+    let transactionId = null;
+    let verificationInterval = null;
+
+    // Format phone input
+    phoneInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.startsWith('250')) {
+            value = value.slice(3);
+        }
+        if (value.startsWith('0')) {
+            value = value.slice(1);
+        }
+        e.target.value = value.slice(0, 9);
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        let phone = phoneInput.value.trim();
+        
+        // Validate phone
+        if (!phone || phone.length < 9) {
+            showError('Numéro de téléphone invalide');
+            return;
+        }
+        
+        // Format phone
+        if (phone.startsWith('0')) {
+            phone = '250' + phone.slice(1);
+        } else if (!phone.startsWith('250')) {
+            phone = '250' + phone;
+        }
+
+        // Disable form
+        submitBtn.disabled = true;
+        loadingDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+
+        try {
+            // Initiate payment
+            const response = await fetch('{{ url_for("barista.initiate_payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    participant_id: {{ participant.id }},
+                    phone_number: phone
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                transactionId = data.transaction_id;
+                loadingDiv.innerHTML += '<div class="mt-3 text-muted"><small>Référence: ' + data.reference_id.slice(0, 8) + '...</small></div>';
+                
+                // Start verification polling
+                verifyPayment();
+                verificationInterval = setInterval(verifyPayment, 3000); // Check every 3 seconds
+            } else {
+                showError(data.error || 'Erreur lors de la demande de paiement');
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            showError('Erreur de connexion: ' + error.message);
+            submitBtn.disabled = false;
+        }
+    });
+
+    async function verifyPayment() {
+        try {
+            const response = await fetch(`{{ url_for('barista.verify_payment', transaction_id='') }}${transactionId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.status === 'paid') {
+                    // Payment successful
+                    clearInterval(verificationInterval);
+                    loadingDiv.style.display = 'none';
+                    form.style.display = 'none';
+                    successDiv.style.display = 'block';
+                    
+                    // Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 3000);
+                } else if (data.status === 'failed') {
+                    // Payment failed
+                    clearInterval(verificationInterval);
+                    loadingDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                    showError(data.error || 'Paiement refusé');
+                }
+                // else: still pending, keep checking
+            }
+        } catch (error) {
+            console.error('Verification error:', error);
+            // Continue checking
+        }
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+        loadingDiv.style.display = 'none';
+    }
+</script>
+
+<style>
+    .input-group-lg .form-control {
+        font-size: 1.25rem;
+        padding: 0.875rem 1rem;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
+{% endblock %}

@@ -6,7 +6,8 @@ import os
 from app import create_app, db
 from app.models import (
     User, Role, Service, Sector, PillarIcon, Project, Partner,
-    Article, TeamMember, Statistic, Message, NewsletterSubscriber, MediaAsset
+    Article, TeamMember, Statistic, Message, NewsletterSubscriber, MediaAsset,
+    Event, EventParticipant, Transaction
 )
 
 app = create_app(os.getenv("FLASK_CONFIG", "development"))
@@ -19,7 +20,8 @@ def make_shell_context():
         PillarIcon=PillarIcon, Project=Project, Partner=Partner,
         Article=Article, TeamMember=TeamMember, Statistic=Statistic,
         Message=Message, NewsletterSubscriber=NewsletterSubscriber,
-        MediaAsset=MediaAsset
+        MediaAsset=MediaAsset, Event=Event, EventParticipant=EventParticipant,
+        Transaction=Transaction
     )
 
 

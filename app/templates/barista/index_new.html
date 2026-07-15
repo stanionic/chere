@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Événements - CHERE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold mb-3">Événements CHERE</h1>
+            <p class="lead text-muted">Rejoignez nos événements et ateliers gratuits ou payants pour développer vos compétences</p>
+        </div>
+    </div>
+
+    {% if events.items %}
+    <div class="row g-4">
+        {% for event in events.items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 event-card">
+                {% if event.cover_image %}
+                <img src="{{ event.cover_image }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-primary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-calendar-event text-white" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        {% if event.is_paid %}
+                        <span class="badge bg-warning text-dark">Payant</span>
+                        {% else %}
+                        <span class="badge bg-success">Gratuit</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="card-text text-muted small">{{ event.summary[:80] }}...</p>
+                    
+                    <div class="mb-3">
+                        {% if event.event_date %}
+                        <div class="small mb-2">
+                            <i class="bi bi-calendar-event"></i>
+                            {{ event.event_date.strftime('%d %b %Y à %H:%M') }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if event.location %}
+                        <div class="small">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ event.location }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if event.is_paid %}
+                    <div class="mb-3">
+                        <strong class="text-primary">{{ "%.0f"|format(event.price) }} RWF</strong>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-people"></i>
+                            {% if event.max_participants %}
+                            {{ event.get_participant_count() }}/{{ event.max_participants }} inscrits
+                            {% else %}
+                            {{ event.get_participant_count() }} inscrits
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('barista.event_detail', slug=event.slug) }}" class="btn btn-sm btn-primary">
+                            Voir plus
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if events.pages > 1 %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if events.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('barista.index', page=events.prev_num) }}">Précédent</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Précédent</span>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in events.iter_pages(left_edge=1, left_margin=1, right_margin=1, right_edge=1) %}
+                        {% if page_num %}
+                            {% if page_num == events.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('barista.index', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if events.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('barista.index', page=events.next_num) }}">Suivant</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Suivant</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="row">
+        <div class="col-lg-6 mx-auto text-center py-5">
+            <i class="bi bi-calendar-x" style="font-size: 4rem; color: #ccc;"></i>
+            <p class="mt-3 text-muted">Aucun événement pour le moment. Revenerez bientôt!</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .event-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
+{% endblock %}

@@ -214,3 +214,115 @@ class MediaAsset(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     alt_text = db.Column(db.String(200))
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Event(db.Model):
+    """Événements publics (conférences, ateliers, formations, etc.)."""
+    __tablename__ = "events"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(180), nullable=False)
+    slug = db.Column(db.String(200), unique=True, nullable=False, index=True)
+    description = db.Column(db.Text, nullable=False)
+    summary = db.Column(db.String(280))
+    event_type = db.Column(db.String(50), nullable=False)  # conference, workshop, training, webinar, meetup, etc.
+    is_paid = db.Column(db.Boolean, default=False)
+    price = db.Column(db.Float, default=0.0)  # RWF
+    currency = db.Column(db.String(3), default="RWF")
+    max_participants = db.Column(db.Integer)  # NULL = unlimited
+    location = db.Column(db.String(255))
+    event_date = db.Column(db.DateTime)
+    event_end_date = db.Column(db.DateTime)
+    registration_deadline = db.Column(db.DateTime)
+    cover_image = db.Column(db.String(255))
+    organizer_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    organizer = db.relationship("User", foreign_keys=[organizer_id])
+    is_published = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    participants = db.relationship(
+        "EventParticipant",
+        back_populates="event",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    transactions = db.relationship(
+        "Transaction",
+        back_populates="event",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+
+    def get_participant_count(self):
+        return self.participants.filter_by(status="confirmed").count()
+
+    def is_registration_open(self):
+        from datetime import datetime as dt
+        if self.registration_deadline:
+            return dt.utcnow() < self.registration_deadline
+        return True
+
+    def __repr__(self):
+        return f"<Event {self.title}>"
+
+
+class EventParticipant(db.Model):
+    """Participants aux événements."""
+    __tablename__ = "event_participants"
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=False, index=True)
+    full_name = db.Column(db.String(140), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(30), default="pending")  # pending, confirmed, cancelled, no_show
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+    confirmation_date = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
+    
+    # Relationships
+    event = db.relationship("Event", back_populates="participants")
+    transaction = db.relationship("Transaction", uselist=False, back_populates="participant")
+
+    __table_args__ = (
+        db.Index("idx_event_email", "event_id", "email"),
+    )
+
+    def __repr__(self):
+        return f"<EventParticipant {self.full_name} - {self.event.title}>"
+
+
+class Transaction(db.Model):
+    """Transactions de paiement MoMo pour les événements."""
+    __tablename__ = "transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=False, index=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey("event_participants.id"), nullable=False, index=True)
+    
+    # Payment Details
+    amount = db.Column(db.Float, nullable=False)  # RWF
+    currency = db.Column(db.String(3), default="RWF")
+    phone_number = db.Column(db.String(20), nullable=False)  # MoMo phone
+    
+    # Transaction Status
+    status = db.Column(db.String(30), default="pending")  # pending, success, failed, cancelled
+    momo_reference = db.Column(db.String(100))  # Reference from MoMo API
+    payment_method = db.Column(db.String(50), default="momo")  # momo, card, bank_transfer, etc.
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    paid_at = db.Column(db.DateTime)
+    
+    # Response Data
+    response_data = db.Column(db.JSON)  # Store full MoMo API response
+    
+    # Relationships
+    event = db.relationship("Event", back_populates="transactions")
+    participant = db.relationship("EventParticipant", back_populates="transaction")
+
+    def is_paid(self):
+        return self.status == "success"
+
+    def __repr__(self):
+        return f"<Transaction {self.id} - {self.status}>"

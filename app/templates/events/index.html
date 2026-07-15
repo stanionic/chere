@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">Événements</h1>
+            <p class="lead text-muted">Découvrez nos prochains événements, ateliers et conférences.</p>
+        </div>
+        <div class="col-md-4">
+            <form class="input-group" method="get" action="{{ url_for('events.index') }}">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Rechercher un événement..."
+                    id="searchInput"
+                    name="q"
+                    value="{{ search_query }}"
+                >
+                <button class="btn btn-primary" type="submit">Rechercher</button>
+            </form>
+        </div>
+    </div>
+
+    {% if events.items %}
+        <div class="row">
+            {% for event in events.items %}
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 event-card" style="transition: all 0.3s ease;">
+                        {% if event.cover_image %}
+                            <img src="{{ event.cover_image }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-calendar-alt fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                {% if event.is_paid %}
+                                    <span class="badge bg-warning text-dark">Payant</span>
+                                {% else %}
+                                    <span class="badge bg-success">Gratuit</span>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="card-text text-muted small">
+                                {{ (event.summary or event.description)[:80] }}{% if (event.summary or event.description)|length > 80 %}...{% endif %}
+                            </p>
+                            
+                            <div class="small text-muted mb-3">
+                                <div><i class="far fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y') if event.event_date }}</div>
+                                {% if event.location %}<div><i class="fas fa-map-marker-alt"></i> {{ event.location }}</div>{% endif %}
+                                <div><i class="fas fa-users"></i> {{ event.get_participant_count() }}{% if event.max_participants %}/{{ event.max_participants }}{% endif %}</div>
+                            </div>
+                            
+                            {% if event.is_paid %}
+                                <div class="alert alert-info py-2 px-3 mb-3 small">
+                                    <strong>{{ event.price }} RWF</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm w-100">
+                                Voir les détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if events.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-5">
+                    {% if events.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('events.index', page=events.prev_num, q=search_query) }}">Précédent</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in events.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == events.page %}
+                                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('events.index', page=page_num, q=search_query) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if events.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('events.index', page=events.next_num, q=search_query) }}">Suivant</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            {% if search_query %}
+                <p class="mb-0">Aucun événement ne correspond à votre recherche pour <strong>{{ search_query }}</strong>.</p>
+            {% else %}
+                <p class="mb-0">Aucun événement actuellement disponible. Consultez-nous plus tard!</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .event-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

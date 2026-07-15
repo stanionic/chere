@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} - CHERE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-5">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Cover Image -->
+            {% if event.cover_image %}
+            <img src="{{ event.cover_image }}" class="img-fluid rounded mb-4" alt="{{ event.title }}" style="max-height: 400px; object-fit: cover; width: 100%;">
+            {% endif %}
+
+            <!-- Title and Meta -->
+            <h1 class="mb-2">{{ event.title }}</h1>
+            
+            <div class="d-flex flex-wrap gap-3 mb-4 pb-4 border-bottom">
+                {% if event.event_date %}
+                <div>
+                    <i class="bi bi-calendar-event text-primary"></i>
+                    <span>{{ event.event_date.strftime('%d %B %Y') }} à {{ event.event_date.strftime('%H:%M') }}</span>
+                </div>
+                {% endif %}
+                
+                {% if event.location %}
+                <div>
+                    <i class="bi bi-geo-alt text-primary"></i>
+                    <span>{{ event.location }}</span>
+                </div>
+                {% endif %}
+                
+                <div>
+                    <i class="bi bi-people text-primary"></i>
+                    <span>
+                        {% if event.max_participants %}
+                        {{ event.get_participant_count() }}/{{ event.max_participants }} places
+                        {% else %}
+                        {{ event.get_participant_count() }} participants
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-5">
+                <h3>À propos de cet événement</h3>
+                <p class="lead">{{ event.description }}</p>
+            </div>
+
+            <!-- Event Status -->
+            {% if not event.is_registration_open() %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                Les inscriptions sont fermées pour cet événement.
+            </div>
+            {% elif event.max_participants and event.get_participant_count() >= event.max_participants %}
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                Cet événement est complet.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar - Registration Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg border-0 sticky-top" style="top: 20px;">
+                <!-- Price Card -->
+                <div class="card-body border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        {% if event.is_paid %}
+                        <div>
+                            <h4 class="text-primary mb-0">{{ "%.0f"|format(event.price) }} RWF</h4>
+                            <small class="text-muted">Événement payant</small>
+                        </div>
+                        <span class="badge bg-warning text-dark">PAYANT</span>
+                        {% else %}
+                        <div>
+                            <h4 class="text-success mb-0">Gratuit</h4>
+                            <small class="text-muted">Événement gratuit</small>
+                        </div>
+                        <span class="badge bg-success">GRATUIT</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Registration Form -->
+                <div class="card-body">
+                    {% if participant %}
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i>
+                        Vous êtes inscrit à cet événement
+                        <br>
+                        <small>Statut: <strong>{{ participant.status.upper() }}</strong></small>
+                    </div>
+                    {% elif event.is_registration_open() and (not event.max_participants or event.get_participant_count() < event.max_participants) %}
+                    <form id="registration-form" method="POST" action="{{ url_for('barista.register_event', slug=event.slug) }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.full_name.label(class="form-label") }}
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                            {% if form.full_name.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.full_name.errors[0] }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.email.errors[0] }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.phone.errors[0] }}
+                            </div>
+                            {% else %}
+                            <small class="form-text text-muted">Format: +250 7xx xxx xxx</small>
+                            {% endif %}
+                        </div>
+
+                        <div id="submit-loading" style="display: none;" class="mb-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <span class="ms-2">Traitement en cours...</span>
+                        </div>
+
+                        {{ form.submit(class="btn btn-primary btn-lg w-100") }}
+                    </form>
+
+                    <script>
+                    document.getElementById('registration-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        
+                        const form = e.target;
+                        const loading = document.getElementById('submit-loading');
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        
+                        loading.style.display = 'block';
+                        submitBtn.disabled = true;
+                        
+                        try {
+                            const response = await fetch(form.action, {
+                                method: 'POST',
+                                body: new FormData(form),
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                // Afficher message de succès
+                                form.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> ' + data.message + '</div>';
+                                
+                                // Rediriger après 2 secondes
+                                if (data.redirect) {
+                                    setTimeout(() => {
+                                        window.location.href = data.redirect;
+                                    }, 2000);
+                                }
+                            } else {
+                                // Afficher erreur
+                                const errorMsg = data.error || 'Une erreur s\'est produite';
+                                form.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> ' + errorMsg + '</div>' + form.innerHTML;
+                            }
+                        } catch (error) {
+                            form.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> Erreur de connexion</div>' + form.innerHTML;
+                        } finally {
+                            loading.style.display = 'none';
+                            submitBtn.disabled = false;
+                        }
+                    });
+                    </script>
+                    {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        Les inscriptions à cet événement sont fermées ou l'événement est complet.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Event Info Footer -->
+                <div class="card-footer bg-light">
+                    <div class="small text-muted">
+                        <i class="bi bi-info-circle"></i>
+                        Vous recevrez une confirmation par email
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Events -->
+    <div class="row mt-5 pt-5 border-top">
+        <div class="col-12">
+            <h3 class="mb-4">Autres événements</h3>
+            <div class="row g-4">
+                {% set related = event.query.filter_by(is_published=True).filter(Event.id != event.id).limit(3).all() %}
+                {% if related %}
+                    {% for related_event in related %}
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            {% if related_event.cover_image %}
+                            <img src="{{ related_event.cover_image }}" class="card-img-top" alt="{{ related_event.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ related_event.title }}</h5>
+                                <a href="{{ url_for('barista.event_detail', slug=related_event.slug) }}" class="btn btn-sm btn-outline-primary">
+                                    Voir l'événement
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
