@@ -45,20 +45,24 @@ def bootstrap_dev_data():
             is_published=True,
         ))
 
-    if not Event.query.filter_by(slug="barista-coffee-experience").first():
+    barista_event = Event.query.filter_by(slug="barista-coffee-experience").first()
+    if not barista_event:
         db.session.add(Event(
             title="Barista Coffee Experience",
             slug="barista-coffee-experience",
             description="Order from our full Barista menu, enjoy live coffee service, and pay with MoMo as part of the CHERE experience.",
             summary="Full barista menu with MoMo ordering.",
             event_type="barista",
-            is_paid=False,
-            price=0.0,
+            is_paid=True,
+            price=500.0,
             currency="RWF",
             location="CHERE Hub, Kigali",
             event_date=datetime(2026, 8, 20, 9, 0),
             is_published=True,
         ))
+    else:
+        barista_event.is_paid = True
+        barista_event.price = 500.0
 
     if not BaristaMenu.query.first():
         menu_items = [

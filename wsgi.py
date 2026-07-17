@@ -51,22 +51,27 @@ def _seed_events():
         ))
         db.session.commit()
         logger.info("COOKING CLASS event seeded.")
-    if not Event.query.filter_by(slug="barista-coffee-experience").first():
+    barista_event = Event.query.filter_by(slug="barista-coffee-experience").first()
+    if not barista_event:
         db.session.add(Event(
             title="Barista Coffee Experience",
             slug="barista-coffee-experience",
-            description="Order from our full Barista menu \u2014 hot drinks, iced drinks, teas and extras \u2014 and pay with MoMo. A live coffee experience by CHERE.",
+            description="Order from our full Barista menu — hot drinks, iced drinks, teas and extras — and pay with MoMo. A live coffee experience by CHERE.",
             summary="Full barista menu with MoMo ordering.",
             event_type="workshop",
-            is_paid=False,
-            price=0.0,
+            is_paid=True,
+            price=500.0,
             currency="RWF",
             location="CHERE Hub, Kigali",
             event_date=datetime(2026, 8, 20, 9, 0),
             is_published=True,
         ))
-        db.session.commit()
         logger.info("Barista Coffee Experience event seeded.")
+    else:
+        barista_event.is_paid = True
+        barista_event.price = 500.0
+        logger.info("Barista Coffee Experience event updated to paid.")
+    db.session.commit()
     if not BaristaMenu.query.first():
         menu_items = [
             ("Espresso", "espresso", "Double shot espresso rich and bold", 800, "☕", 1),
