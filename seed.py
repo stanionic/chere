@@ -139,13 +139,20 @@ def seed_events():
             description="Order from our full Barista menu, enjoy live coffee service, and pay with MoMo as part of the CHERE experience.",
             summary="Full barista menu with MoMo ordering.",
             event_type="barista",
-            is_paid=False,
-            price=0.0,
+            is_paid=True,
+            price=500.0,
             currency="RWF",
             location="CHERE Hub, Kigali",
             event_date=datetime(2026, 8, 20, 9, 0),
             is_published=True,
         ))
+    else:
+        # Update existing event to paid
+        event = Event.query.filter_by(slug="barista-coffee-experience").first()
+        if not event.is_paid:
+            event.is_paid = True
+            event.price = 500.0
+            db.session.commit()
     db.session.commit()
 
 
@@ -160,10 +167,15 @@ def seed_pos_data():
     existing_merchant = Merchant.query.filter_by(business_name="CHERE Coffee Bar").first()
     if not existing_merchant:
         # Get admin user to link to merchant
-        admin_user = User.query.filter_by(email="admin@chere-global.org").first()
+        admin_user = User.query.filter_by(email="ADMIN-CHERE").first()
         if not admin_user:
-            print("[INFO] Admin user not found, skipping POS seed.")
-            return
+            # Fallback: get any admin user by role
+            admin_role = Role.query.filter_by(name="admin").first()
+            if admin_role:
+                admin_user = User.query.filter_by(role_id=admin_role.id).first()
+            if not admin_user:
+                print("[INFO] Admin user not found, skipping POS seed.")
+                return
         merchant = Merchant(
             user_id=admin_user.id,
             business_name="CHERE Coffee Bar",
