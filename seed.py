@@ -149,6 +149,112 @@ def seed_events():
     db.session.commit()
 
 
+def seed_pos_data():
+    """Seed merchant, shop, category, and products for Barista Coffee Experience event."""
+    # Check if we already have a shop for the barista event
+    barista_event = Event.query.filter_by(slug="barista-coffee-experience").first()
+    if not barista_event:
+        print("[INFO] Barista event not found, skipping POS seed.")
+        return
+    # Check if merchant exists
+    existing_merchant = Merchant.query.filter_by(business_name="CHERE Coffee Bar").first()
+    if not existing_merchant:
+        # Get admin user to link to merchant
+        admin_user = User.query.filter_by(email="admin@chere-global.org").first()
+        if not admin_user:
+            print("[INFO] Admin user not found, skipping POS seed.")
+            return
+        merchant = Merchant(
+            user_id=admin_user.id,
+            business_name="CHERE Coffee Bar",
+            business_registration_no="CHERE-001",
+            country="Rwanda",
+            wallet_balance=0.0,
+            is_verified=True
+        )
+        db.session.add(merchant)
+        db.session.flush()
+
+        # Create a Shop linked to the event
+        shop = Shop(
+            merchant_id=merchant.id,
+            event_id=barista_event.id,
+            name="CHERE Coffee Stand",
+            address="CHERE Hub, Kigali",
+            is_active=True
+        )
+        db.session.add(shop)
+        db.session.flush()
+
+        # Create Category
+        category_espresso = Category(
+            shop_id=shop.id,
+            name="Espresso & Brews"
+        )
+        category_tea = Category(
+            shop_id=shop.id,
+            name="Teas & Chai"
+        )
+        category_pastry = Category(
+            shop_id=shop.id,
+            name="Pastries"
+        )
+        db.session.add_all([category_espresso, category_tea, category_pastry])
+        db.session.flush()
+
+        # Products
+        products = [
+            Product(
+                shop_id=shop.id,
+                category_id=category_espresso.id,
+                name="Espresso",
+                description="Double shot of rich espresso",
+                base_price=800.0,
+                stock_quantity=100,
+                is_active=True
+            ),
+            Product(
+                shop_id=shop.id,
+                category_id=category_espresso.id,
+                name="Cappuccino",
+                description="Espresso with steamed milk and thick foam",
+                base_price=1200.0,
+                stock_quantity=80,
+                is_active=True
+            ),
+            Product(
+                shop_id=shop.id,
+                category_id=category_espresso.id,
+                name="Latte",
+                description="Espresso with lots of steamed milk",
+                base_price=1300.0,
+                stock_quantity=80,
+                is_active=True
+            ),
+            Product(
+                shop_id=shop.id,
+                category_id=category_tea.id,
+                name="Green Tea",
+                description="Fresh green tea",
+                base_price=1000.0,
+                stock_quantity=50,
+                is_active=True
+            ),
+            Product(
+                shop_id=shop.id,
+                category_id=category_pastry.id,
+                name="Croissant",
+                description="Buttery, flaky pastry",
+                base_price=800.0,
+                stock_quantity=30,
+                is_active=True
+            )
+        ]
+        db.session.add_all(products)
+        db.session.commit()
+        print("[OK] POS data seeded.")
+
+
 def run():
     print(f"DB: {app.config['SQLALCHEMY_DATABASE_URI']}")
     with app.app_context():
@@ -160,6 +266,7 @@ def run():
         seed_pillar_icons()
         seed_events()
         seed_barista_menu()
+        seed_pos_data()
         print("[OK] Seed termine.")
 
 

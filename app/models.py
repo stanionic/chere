@@ -346,11 +346,11 @@ class EventParticipant(db.Model):
 
 
 class Transaction(db.Model):
-    """Transactions de paiement MoMo pour les événements."""
+    """Transactions de paiement MoMo pour les événements et barista."""
     __tablename__ = "transactions"
     id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=False, index=True)
-    participant_id = db.Column(db.Integer, db.ForeignKey("event_participants.id"), nullable=False, index=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=True, index=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey("event_participants.id"), nullable=True, index=True)
     
     # Payment Details
     amount = db.Column(db.Float, nullable=False)  # RWF
@@ -618,7 +618,7 @@ class PosOrder(db.Model):
     
     shop = db.relationship("Shop", back_populates="orders")
     customer = db.relationship("User")
-    pos_device = db.relationship("POSDevice")
+    pos_device = db.relationship("POSDevice", back_populates="orders")
     items = db.relationship("PosOrderItem", back_populates="order", cascade="all, delete-orphan")
     transactions = db.relationship("PosTransaction", back_populates="order")
     
@@ -689,7 +689,7 @@ class POSDevice(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     shop = db.relationship("Shop", back_populates="pos_devices")
-    orders = db.relationship("PosOrder", backref="pos_device")
+    orders = db.relationship("PosOrder", back_populates="pos_device")
     
     def to_dict(self):
         return {
