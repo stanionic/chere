@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Contact — {{ site_name }}{% endblock %}
+{% block title %}{{ t('contact.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm bg-soft">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow">Parlons-en</span>
-        <h1 class="mt-2">Contactez CHERE</h1>
+        <span class="eyebrow">{{ t('contact.eyebrow') }}</span>
+        <h1 class="mt-2">{{ t('contact.heading') }}</h1>
         <p class="lead text-muted-soft" style="max-width:560px;">
-          Une question, un projet, un partenariat ? Notre équipe internationale vous répond rapidement.
+          {{ t('contact.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/contact.svg') }}" alt="Contactez CHERE" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/contact.svg') }}" alt="{{ t('contact.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -40,8 +40,8 @@
         <div class="d-flex align-items-start gap-3 mb-4">
           <div class="icon-badge"><i class="bi bi-geo-alt"></i></div>
           <div>
-            <h6 class="mb-1">Siège international</h6>
-            <span class="text-muted-soft small">Bureaux répartis sur plusieurs continents</span>
+            <h6 class="mb-1">{{ t('contact.hq') }}</h6>
+            <span class="text-muted-soft small">{{ t('contact.hq_copy') }}</span>
           </div>
         </div>
         <div class="d-flex gap-2 mt-4">
@@ -54,7 +54,7 @@
 
         <div class="qr-card mt-4 d-inline-block">
           <img src="{{ url_for('static', filename='img/qr/chere-app-qr.png') }}" alt="QR code CHERE" width="150" height="150">
-          <p class="small text-muted-soft mt-3 mb-0"><i class="bi bi-qr-code-scan me-1"></i>Scannez pour ouvrir<br>l'app CHERE sur mobile</p>
+          <p class="small text-muted-soft mt-3 mb-0"><i class="bi bi-qr-code-scan me-1"></i>{{ t('contact.qr_copy') }}</p>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
                 {{ form.body(class="form-control rounded-chere", rows=5) }}
               </div>
               <div class="col-12">
-                <button type="submit" class="btn btn-chere w-100"><i class="bi bi-send me-2"></i>Envoyer le message</button>
+                <button type="submit" class="btn btn-chere w-100"><i class="bi bi-send me-2"></i>{{ t('contact.send_message') }}</button>
               </div>
             </div>
           </form>

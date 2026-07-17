@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Innovation — {{ site_name }}{% endblock %}
+{% block title %}{{ t('innovation.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm text-white" style="background:linear-gradient(135deg,var(--royal-blue),var(--royal-blue-dark));">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow" style="color:var(--gold-light)">Pilier n°1</span>
-        <h1 class="mt-2">Innovation</h1>
+        <span class="eyebrow" style="color:var(--gold-light)">{{ t('innovation.pillar') }}</span>
+        <h1 class="mt-2">{{ t('innovation.title') }}</h1>
         <p class="lead text-white-50" style="max-width:560px;">
-          Nous mobilisons les technologies les plus avancées pour résoudre les défis mondiaux
-          et créer des opportunités partout dans le monde.
+          {{ t('innovation.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/innovation.svg') }}" alt="Innovation technologique" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/innovation.svg') }}" alt="{{ t('innovation.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -51,8 +50,8 @@
 
 <section class="section bg-soft text-center">
   <div class="container">
-    <h2 class="mb-3">Envie de collaborer sur un projet d'innovation ?</h2>
-    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Contactez notre équipe</a>
+      <h2 class="mb-3">{{ t('innovation.cta') }}</h2>
+      <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">{{ t('common.contact_team') }}</a>
   </div>
 </section>
 

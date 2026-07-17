@@ -4,6 +4,7 @@ from app.blueprints.events import events_bp
 from app.models import Event, EventParticipant, Transaction
 from app.extensions import db
 from app.blueprints.events.forms import EventRegistrationForm, MoMoPaymentForm
+from app.i18n import translate
 from app.services.momo_service import momo_service
 from datetime import datetime
 from itsdangerous import URLSafeSerializer, BadSignature
@@ -168,7 +169,10 @@ def register_event(slug):
     form = EventRegistrationForm()
     
     if not event.is_registration_open():
-        return jsonify({"success": False, "error": "Les inscriptions sont fermées"}), 400
+        return jsonify({
+            "success": False,
+            "error": translate("events.routes.registration_closed"),
+        }), 400
     
     if form.validate_on_submit():
         try:
@@ -181,7 +185,7 @@ def register_event(slug):
             if existing:
                 return jsonify({
                     "success": False,
-                    "error": "Vous êtes déjà inscrit à cet événement"
+                    "error": translate("events.routes.already_registered"),
                 }), 400
             
             # Vérifier le nombre max de participants
@@ -189,7 +193,7 @@ def register_event(slug):
             if _is_event_full(event, reserved_count):
                     return jsonify({
                         "success": False,
-                        "error": "L'événement est complet"
+                        "error": translate("events.routes.event_full"),
                     }), 400
             
             # Créer le participant
@@ -211,7 +215,7 @@ def register_event(slug):
                 participant_token = _build_participant_token(participant)
                 return jsonify({
                     "success": True,
-                    "message": "Inscription confirmée!",
+                    "message": translate("events.routes.registration_confirmed"),
                     "redirect": url_for(
                         "events.event_registered",
                         event_id=participant.event_id,
@@ -224,7 +228,7 @@ def register_event(slug):
                 participant_token = _build_participant_token(participant)
                 return jsonify({
                     "success": True,
-                    "message": "Inscription enregistrée. Procédez au paiement.",
+                    "message": translate("events.routes.registration_recorded"),
                     "redirect": url_for(
                         "events.payment",
                         participant_id=participant.id,
@@ -236,7 +240,7 @@ def register_event(slug):
             db.session.rollback()
             return jsonify({
                 "success": False,
-                "error": f"Erreur lors de l'inscription: {str(e)}"
+                "error": translate("events.routes.registration_error", error=str(e)),
             }), 500
     
     return jsonify({
@@ -254,12 +258,12 @@ def payment(participant_id):
     access_token = request.args.get("token", type=str)
 
     if not _can_access_participant(participant, access_token):
-        flash("Accès au paiement refusé", "error")
+        flash(translate("events.routes.payment_access_denied"), "error")
         return redirect(url_for("events.index"))
     
     # Vérifier que l'événement est payant
     if not event.is_paid:
-        flash("Cet événement est gratuit", "info")
+        flash(translate("events.routes.free_event"), "info")
         return redirect(
             url_for("events.event_registered", event_id=event.id, token=access_token)
         )
@@ -286,17 +290,23 @@ def initiate_payment():
     event = participant.event
 
     if not _can_access_participant(participant, access_token):
-        return jsonify({"success": False, "error": "Accès refusé"}), 403
+        return jsonify({
+            "success": False,
+            "error": translate("events.routes.access_denied"),
+        }), 403
     
     if not event.is_paid:
-        return jsonify({"success": False, "error": "Événement gratuit"}), 400
+        return jsonify({
+            "success": False,
+            "error": translate("events.routes.free_event_short"),
+        }), 400
     
     # Valider le numéro
     if not momo_service.validate_phone_number(phone_number):
         return jsonify({
             "success": False,
-            "error": "Numéro de téléphone invalide",
-            "hint": "Format: +250 7xx xxx xxx ou 07xx xxx xxx"
+            "error": translate("events.routes.invalid_phone"),
+            "hint": translate("events.form.phone_format"),
         }), 400
     
     try:
@@ -333,21 +343,21 @@ def initiate_payment():
             
             return jsonify({
                 "success": True,
-                "message": "Demande de paiement envoyée. Vérifiez votre téléphone.",
+                "message": translate("events.routes.payment_request_sent"),
                 "reference_id": result.get("reference_id"),
                 "transaction_id": transaction.id
             })
         else:
             return jsonify({
                 "success": False,
-                "error": result.get("error", "Erreur inconnue"),
+                "error": result.get("error", translate("events.routes.unknown_error")),
                 "details": result.get("details")
             }), 400
             
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": f"Erreur lors du paiement: {str(e)}"
+            "error": translate("events.routes.payment_error", error=str(e)),
         }), 500
 
 
@@ -358,12 +368,15 @@ def verify_payment(transaction_id):
     access_token = request.args.get("token", type=str)
 
     if not _can_access_participant(transaction.participant, access_token):
-        return jsonify({"success": False, "error": "Accès refusé"}), 403
+        return jsonify({
+            "success": False,
+            "error": translate("events.routes.access_denied"),
+        }), 403
     
     if not transaction.momo_reference:
         return jsonify({
             "success": False,
-            "error": "Transaction invalide"
+            "error": translate("events.routes.invalid_transaction"),
         }), 400
     
     try:
@@ -384,7 +397,7 @@ def verify_payment(transaction_id):
             return jsonify({
                 "success": True,
                 "status": "SUCCESSFUL",
-                "message": "Paiement confirmé!",
+                "message": translate("events.routes.payment_confirmed"),
                 "redirect": url_for(
                     "events.event_registered",
                     event_id=transaction.event_id,
@@ -398,7 +411,7 @@ def verify_payment(transaction_id):
             return jsonify({
                 "success": False,
                 "status": "FAILED",
-                "message": "Le paiement a échoué. Veuillez réessayer.",
+                "message": translate("events.routes.payment_failed"),
                 "error": status_result.get("error")
             }), 400
         
@@ -407,13 +420,13 @@ def verify_payment(transaction_id):
             return jsonify({
                 "success": False,
                 "status": "PENDING",
-                "message": "Paiement en attente..."
+                "message": translate("events.routes.payment_pending"),
             }), 202
     
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": f"Erreur lors de la vérification: {str(e)}"
+            "error": translate("events.routes.verification_error", error=str(e)),
         }), 500
 
 
@@ -427,7 +440,7 @@ def event_registered(event_id):
     )
     
     if not participant:
-        flash("Participant non trouvé", "error")
+        flash(translate("events.routes.participant_not_found"), "error")
         return redirect(url_for("events.index"))
     
     return render_template(

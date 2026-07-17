@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<html lang="{{ current_locale }}" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}{{ site_name }} — {{ site_tagline }}{% endblock %}</title>
-  <meta name="description" content="{% block description %}CHERE est une entreprise sociale internationale dédiée à l'innovation, aux énergies renouvelables et à l'action humanitaire à travers le monde.{% endblock %}">
+  <meta name="description" content="{% block description %}{{ t('base.meta_description') }}{% endblock %}">
   <meta name="theme-color" content="#1446a0">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +20,7 @@
 
   <!-- Open Graph -->
   <meta property="og:title" content="{{ site_name }} — {{ site_tagline }}">
-  <meta property="og:description" content="Transformer le monde par l'innovation, les énergies renouvelables et l'humanitaire.">
+  <meta property="og:description" content="{{ t('base.og_description') }}">
   <meta property="og:type" content="website">
 
   <!-- Bootstrap 5 -->

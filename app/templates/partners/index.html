@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Partenaires — {{ site_name }}{% endblock %}
+{% block title %}{{ t('partners.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm bg-soft">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow">Ensemble, plus loin</span>
-        <h1 class="mt-2">Nos partenaires</h1>
+        <span class="eyebrow">{{ t('partners.eyebrow') }}</span>
+        <h1 class="mt-2">{{ t('partners.heading') }}</h1>
         <p class="lead text-muted-soft" style="max-width:560px;">
-          CHERE collabore avec des institutions internationales, des ONG, des universités,
-          des entreprises et des banques du monde entier.
+          {{ t('partners.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/partners.svg') }}" alt="Partenaires CHERE" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/partners.svg') }}" alt="{{ t('partners.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -52,8 +51,8 @@
 
 <section class="section bg-soft text-center">
   <div class="container">
-    <h2 class="mb-3">Devenir partenaire de CHERE</h2>
-    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Nous contacter</a>
+      <h2 class="mb-3">{{ t('partners.cta') }}</h2>
+      <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">{{ t('common.contact_us') }}</a>
   </div>
 </section>
 

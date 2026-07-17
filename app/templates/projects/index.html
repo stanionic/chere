@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Projets — {{ site_name }}{% endblock %}
+{% block title %}{{ t('projects.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm bg-soft">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow">Présence mondiale</span>
-        <h1 class="mt-2">Nos projets</h1>
+        <span class="eyebrow">{{ t('projects.eyebrow') }}</span>
+        <h1 class="mt-2">{{ t('projects.heading') }}</h1>
         <p class="lead text-muted-soft" style="max-width:560px;">
-          Découvrez les projets déployés et à venir de CHERE, sur tous les continents.
+          {{ t('projects.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/projects.svg') }}" alt="Projets CHERE dans le monde" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/projects.svg') }}" alt="{{ t('projects.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -34,14 +34,14 @@
           <p class="small text-muted-soft">{{ p.summary }}</p>
           <div class="d-flex justify-content-between align-items-center">
             <span class="badge bg-primary-subtle text-primary">{{ p.country or p.continent }}</span>
-            <a href="{{ url_for('projects.detail', slug=p.slug) }}" class="btn btn-outline-chere btn-sm">Learn More</a>
+            <a href="{{ url_for('projects.detail', slug=p.slug) }}" class="btn btn-outline-chere btn-sm">{{ t('common.learn_more') }}</a>
           </div>
         </div>
       </div>
       {% else %}
       <div class="col-12 text-center text-muted-soft">
         <i class="bi bi-map fs-1 mb-2 d-block"></i>
-        Les projets seront bientôt publiés depuis l'espace d'administration.
+        {{ t('projects.empty') }}
       </div>
       {% endfor %}
     </div>

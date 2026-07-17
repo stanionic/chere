@@ -12,7 +12,7 @@
             {% if event.event_type|lower == "barista" or event.slug == "barista-coffee-experience" %}
                 <div class="mb-4">
                     <a href="{{ url_for('events.barista_experience') }}" class="btn btn-outline-primary btn-lg w-100">
-                        <i class="bi bi-cup-hot"></i> Order Coffee Now
+                        <i class="bi bi-cup-hot"></i> {{ t('events.detail.order_coffee_now') }}
                     </a>
                 </div>
             {% endif %}
@@ -22,32 +22,32 @@
             <!-- Métadonnées -->
             <div class="row mb-4 pb-4 border-bottom">
                 <div class="col-md-3">
-                    <small class="text-muted d-block">Date</small>
-                    <strong>{{ event.event_date.strftime('%d %b %Y à %H:%M') if event.event_date else 'À déterminer' }}</strong>
+                    <small class="text-muted d-block">{{ t('events.detail.date') }}</small>
+                    <strong>{{ format_datetime(event.event_date) }}</strong>
                 </div>
                 <div class="col-md-3">
-                    <small class="text-muted d-block">Lieu</small>
-                    <strong>{{ event.location or 'En ligne' }}</strong>
+                    <small class="text-muted d-block">{{ t('events.detail.location') }}</small>
+                    <strong>{{ event.location or t('common.online') }}</strong>
                 </div>
                 <div class="col-md-3">
-                    <small class="text-muted d-block">Participants</small>
+                    <small class="text-muted d-block">{{ t('events.detail.participants') }}</small>
                     <strong>{{ reserved_count }}{% if event.max_participants %}/{{ event.max_participants }}{% endif %}</strong>
                 </div>
                 <div class="col-md-3">
-                    <small class="text-muted d-block">Type</small>
-                    <strong>{{ event.event_type|capitalize }}</strong>
+                    <small class="text-muted d-block">{{ t('events.detail.type') }}</small>
+                    <strong>{{ translate_event_type(event.event_type) }}</strong>
                 </div>
             </div>
 
             <!-- Description -->
             <div class="mb-5">
-                <h3>À propos de cet événement</h3>
+                <h3>{{ t('events.detail.about') }}</h3>
                 <p class="lead">{{ event.description }}</p>
             </div>
 
             <!-- Section Événements similaires -->
             <div class="mt-5 pt-5 border-top">
-                <h3>Autres événements</h3>
+                <h3>{{ t('events.detail.related') }}</h3>
                 <div class="row">
                     {% for e in related_events %}
                         <div class="col-md-4 mb-3">
@@ -63,7 +63,7 @@
                     {% endfor %}
                     {% if not related_events %}
                         <div class="col-12">
-                            <p class="text-muted mb-0">Aucun autre événement similaire n'est disponible pour le moment.</p>
+                            <p class="text-muted mb-0">{{ t('events.detail.no_related') }}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -81,16 +81,16 @@
                         </div>
                     {% else %}
                         <div class="alert alert-success mb-3">
-                            <strong class="display-6">GRATUIT</strong>
+                            <strong class="display-6">{{ t('events.badge.free')|upper }}</strong>
                         </div>
                     {% endif %}
 
                     {% if participant %}
                         <div class="alert alert-success">
-                            <i class="bi bi-check-circle-fill"></i> Vous êtes inscrit à cet événement
+                            <i class="bi bi-check-circle-fill"></i> {{ t('events.detail.you_are_registered') }}
                         </div>
                         <a href="{{ url_for('events.event_registered', event_id=event.id) }}" class="btn btn-primary w-100">
-                            Voir votre inscription
+                            {{ t('events.detail.view_registration') }}
                         </a>
                     {% elif can_register %}
                         <form id="registrationForm" method="post" action="{{ url_for('events.register_event', slug=event.slug) }}">
@@ -115,15 +115,15 @@
                                 {% if form.phone.errors %}
                                     <small class="text-danger">{{ form.phone.errors[0] }}</small>
                                 {% else %}
-                                    <small class="text-muted">Format: +250XXXXXXXXX ou 07XXXXXXXX</small>
+                                    <small class="text-muted">{{ t('events.detail.phone_hint') }}</small>
                                 {% endif %}
                             </div>
                             <div id="registrationFeedback" class="alert d-none" role="alert"></div>
                             <button type="submit" class="btn btn-primary w-100">
                                 {% if event.is_paid %}
-                                    S'inscrire et Payer
+                                    {{ t('events.detail.register_and_pay') }}
                                 {% else %}
-                                    S'inscrire maintenant
+                                    {{ t('events.detail.register_now') }}
                                 {% endif %}
                             </button>
                         </form>
@@ -162,12 +162,12 @@
                                             ? Object.values(data.errors).flat().join(' ')
                                             : '';
                                         feedback.className = 'alert alert-danger';
-                                        feedback.textContent = data.error || fieldErrors || 'Une erreur est survenue';
+                                        feedback.textContent = data.error || fieldErrors || {{ t('events.detail.generic_error')|tojson }};
                                     }
                                 } catch (error) {
                                     console.error('Erreur:', error);
                                     feedback.className = 'alert alert-danger';
-                                    feedback.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+                                    feedback.textContent = {{ t('events.detail.generic_retry_error')|tojson }};
                                 } finally {
                                     submitButton.disabled = false;
                                 }
@@ -175,11 +175,11 @@
                         </script>
                     {% elif is_full %}
                         <div class="alert alert-danger">
-                            Cet événement est complet.
+                            {{ t('events.detail.event_full') }}
                         </div>
                     {% else %}
                         <div class="alert alert-warning">
-                            Les inscriptions à cet événement sont fermées.
+                            {{ t('events.detail.registration_closed') }}
                         </div>
                     {% endif %}
                 </div>
@@ -188,24 +188,24 @@
             <!-- Informations pratiques -->
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Informations pratiques</h5>
+                    <h5 class="mb-0">{{ t('events.detail.practical_info') }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <small class="text-muted d-block">Lieu</small>
-                        <p class="mb-0">{{ event.location or 'À déterminer' }}</p>
+                        <small class="text-muted d-block">{{ t('events.detail.location') }}</small>
+                        <p class="mb-0">{{ event.location or t('common.to_be_announced') }}</p>
                     </div>
                     <div class="mb-3">
-                        <small class="text-muted d-block">Date de début</small>
-                        <p class="mb-0">{{ event.event_date.strftime('%d %b %Y à %H:%M') if event.event_date else 'À déterminer' }}</p>
+                        <small class="text-muted d-block">{{ t('events.detail.start_date') }}</small>
+                        <p class="mb-0">{{ format_datetime(event.event_date) }}</p>
                     </div>
                     <div class="mb-3">
-                        <small class="text-muted d-block">Limite d'inscription</small>
-                        <p class="mb-0">{{ event.registration_deadline.strftime('%d %b %Y') if event.registration_deadline else 'Pas de limite' }}</p>
+                        <small class="text-muted d-block">{{ t('events.detail.registration_deadline') }}</small>
+                        <p class="mb-0">{{ format_date(event.registration_deadline, fallback_key='common.no_limit') }}</p>
                     </div>
                     {% if event.max_participants %}
                     <div>
-                        <small class="text-muted d-block">Places réservées</small>
+                        <small class="text-muted d-block">{{ t('events.detail.reserved_spots') }}</small>
                         <p class="mb-0">{{ reserved_count }}/{{ event.max_participants }}</p>
                     </div>
                     {% endif %}

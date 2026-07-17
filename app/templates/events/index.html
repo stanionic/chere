@@ -4,20 +4,20 @@
 <div class="container my-5">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1 class="display-5">Événements</h1>
-            <p class="lead text-muted">Découvrez nos prochains événements, ateliers et conférences.</p>
+            <h1 class="display-5">{{ t('events.index.title') }}</h1>
+            <p class="lead text-muted">{{ t('events.index.subtitle') }}</p>
         </div>
         <div class="col-md-4">
             <form class="input-group" method="get" action="{{ url_for('events.index') }}">
                 <input
                     type="text"
                     class="form-control"
-                    placeholder="Rechercher un événement..."
+                    placeholder="{{ t('events.index.search_placeholder') }}"
                     id="searchInput"
                     name="q"
                     value="{{ search_query }}"
                 >
-                <button class="btn btn-primary" type="submit">Rechercher</button>
+                <button class="btn btn-primary" type="submit">{{ t('events.index.search') }}</button>
             </form>
         </div>
     </div>
@@ -39,9 +39,9 @@
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h5 class="card-title">{{ event.title }}</h5>
                                 {% if event.is_paid %}
-                                    <span class="badge bg-warning text-dark">Payant</span>
+                                    <span class="badge bg-warning text-dark">{{ t('events.badge.paid') }}</span>
                                 {% else %}
-                                    <span class="badge bg-success">Gratuit</span>
+                                    <span class="badge bg-success">{{ t('events.badge.free') }}</span>
                                 {% endif %}
                             </div>
                             
@@ -50,7 +50,7 @@
                             </p>
                             
                             <div class="small text-muted mb-3">
-                                <div><i class="bi bi-calendar3"></i> {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'TBA' }}</div>
+                                <div><i class="bi bi-calendar3"></i> {{ format_date(event.event_date, fallback_key='common.tba') }}</div>
                                 {% if event.location %}<div><i class="bi bi-geo-alt"></i> {{ event.location }}</div>{% endif %}
                                 <div><i class="bi bi-people"></i> {{ event.get_participant_count() }}{% if event.max_participants %}/{{ event.max_participants }}{% endif %}</div>
                             </div>
@@ -66,15 +66,15 @@
                             {% if event.event_type|lower == "barista" or event.slug == "barista-coffee-experience" %}
                                 <div class="d-grid gap-2">
                                     <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm">
-                                        Voir les détails
+                                        {{ t('events.index.details') }}
                                     </a>
                                     <a href="{{ url_for('events.barista_experience') }}" class="btn btn-outline-primary btn-sm">
-                                        Commander un cafe
+                                        {{ t('events.index.order_coffee') }}
                                     </a>
                                 </div>
                             {% else %}
                                 <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm w-100">
-                                    Voir les détails
+                                    {{ t('events.index.details') }}
                                 </a>
                             {% endif %}
                         </div>
@@ -89,7 +89,7 @@
                 <ul class="pagination justify-content-center mt-5">
                     {% if events.has_prev %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('events.index', page=events.prev_num, q=search_query) }}">Précédent</a>
+                            <a class="page-link" href="{{ url_for('events.index', page=events.prev_num, q=search_query) }}">{{ t('events.index.previous') }}</a>
                         </li>
                     {% endif %}
                     
@@ -105,7 +105,7 @@
                     
                     {% if events.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('events.index', page=events.next_num, q=search_query) }}">Suivant</a>
+                            <a class="page-link" href="{{ url_for('events.index', page=events.next_num, q=search_query) }}">{{ t('events.index.next') }}</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -114,9 +114,9 @@
     {% else %}
         <div class="alert alert-info">
             {% if search_query %}
-                <p class="mb-0">Aucun événement ne correspond à votre recherche pour <strong>{{ search_query }}</strong>.</p>
+                <p class="mb-0">{{ t('events.index.no_search_results', query='<strong>' ~ search_query ~ '</strong>')|safe }}</p>
             {% else %}
-                <p class="mb-0">Aucun événement actuellement disponible. Consultez-nous plus tard!</p>
+                <p class="mb-0">{{ t('events.index.no_events') }}</p>
             {% endif %}
         </div>
     {% endif %}

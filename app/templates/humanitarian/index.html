@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Humanitaire — {{ site_name }}{% endblock %}
+{% block title %}{{ t('humanitarian.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm" style="background:linear-gradient(135deg,var(--gold),#b8850f); color:var(--elegant-black);">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow" style="color:var(--royal-blue-dark)">Pilier n°3</span>
-        <h1 class="mt-2">Humanitaire</h1>
+        <span class="eyebrow" style="color:var(--royal-blue-dark)">{{ t('humanitarian.pillar') }}</span>
+        <h1 class="mt-2">{{ t('humanitarian.title') }}</h1>
         <p class="lead" style="max-width:560px; opacity:.85;">
-          Nous répondons aux besoins essentiels des communautés vulnérables partout dans le monde,
-          avec dignité et efficacité.
+          {{ t('humanitarian.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/humanitarian.svg') }}" alt="Action humanitaire" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/humanitarian.svg') }}" alt="{{ t('humanitarian.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -50,8 +49,8 @@
 
 <section class="section bg-soft text-center">
   <div class="container">
-    <h2 class="mb-3">Devenez partenaire ou bénévole CHERE</h2>
-    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Rejoignez-nous</a>
+      <h2 class="mb-3">{{ t('humanitarian.cta') }}</h2>
+      <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">{{ t('common.join_us') }}</a>
   </div>
 </section>
 

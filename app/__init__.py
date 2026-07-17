@@ -1,9 +1,18 @@
 """
 Application factory CHERE.
 """
-from flask import Flask, render_template
+from flask import Flask, g, render_template, request
 from app.config import config
 from app.extensions import db, migrate, login_manager, csrf
+from app.i18n import (
+    DEFAULT_LOCALE,
+    LOCALE_COOKIE_NAME,
+    detect_locale,
+    format_date,
+    format_datetime,
+    translate,
+    translate_event_type,
+)
 
 
 def create_app(config_name="development"):
@@ -12,6 +21,8 @@ def create_app(config_name="development"):
     if config_name not in config:
         config_name = "development"
     app.config.from_object(config[config_name]())
+    app.config.setdefault("DEFAULT_LOCALE", DEFAULT_LOCALE)
+    app.config.setdefault("SUPPORTED_LOCALES", ("fr", "en"))
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -50,6 +61,13 @@ def create_app(config_name="development"):
     app.register_blueprint(barista_bp, url_prefix="/events/barista")
     app.register_blueprint(pos_bp, url_prefix="/events/pos")
 
+    @app.before_request
+    def set_request_locale():
+        g.current_locale = detect_locale(request, app.config["DEFAULT_LOCALE"])
+        requested_locale = request.args.get("lang")
+        cookie_locale = request.cookies.get(LOCALE_COOKIE_NAME)
+        g.persist_locale = bool(requested_locale) or cookie_locale != g.current_locale
+
     @app.errorhandler(404)
     def not_found(e):
         return render_template("errors/404.html"), 404
@@ -65,7 +83,23 @@ def create_app(config_name="development"):
             "site_name": app.config["SITE_NAME"],
             "site_tagline": app.config["SITE_TAGLINE"],
             "current_year": datetime.utcnow().year,
+            "current_locale": getattr(g, "current_locale", app.config["DEFAULT_LOCALE"]),
+            "t": translate,
+            "format_date": format_date,
+            "format_datetime": format_datetime,
+            "translate_event_type": translate_event_type,
         }
+
+    @app.after_request
+    def persist_locale_cookie(response):
+        if getattr(g, "persist_locale", False):
+            response.set_cookie(
+                LOCALE_COOKIE_NAME,
+                getattr(g, "current_locale", app.config["DEFAULT_LOCALE"]),
+                max_age=60 * 60 * 24 * 365,
+                samesite="Lax",
+            )
+        return response
 
     return app
 

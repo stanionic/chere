@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}À propos — {{ site_name }}{% endblock %}
+{% block title %}{{ t('about.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm bg-soft">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow">Qui sommes-nous</span>
-        <h1 class="mt-2">À propos de CHERE</h1>
+        <span class="eyebrow">{{ t('about.eyebrow') }}</span>
+        <h1 class="mt-2">{{ t('about.heading') }}</h1>
         <p class="lead text-muted-soft" style="max-width:560px;">
-          Community • Humanity • Empowerment • Resources • Environment — une entreprise sociale
-          internationale qui agit sur tous les continents.
+          {{ t('about.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/about.svg') }}" alt="Communauté CHERE" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/about.svg') }}" alt="{{ t('about.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -26,29 +25,29 @@
       <div class="col-md-3">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge mx-auto"><i class="bi bi-globe"></i></div>
-          <h6>Portée mondiale</h6>
-          <p class="small text-muted-soft">Présent sur tous les continents, au service des communautés.</p>
+          <h6>{{ t('about.reach_title') }}</h6>
+          <p class="small text-muted-soft">{{ t('about.reach_copy') }}</p>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge gold mx-auto"><i class="bi bi-lightbulb"></i></div>
-          <h6>Innovation</h6>
-          <p class="small text-muted-soft">Technologies de pointe au service du bien commun.</p>
+          <h6>{{ t('navbar.innovation') }}</h6>
+          <p class="small text-muted-soft">{{ t('about.innovation_copy') }}</p>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge mx-auto"><i class="bi bi-sun"></i></div>
-          <h6>Énergie propre</h6>
-          <p class="small text-muted-soft">Des solutions énergétiques renouvelables et accessibles.</p>
+          <h6>{{ t('about.clean_energy_title') }}</h6>
+          <p class="small text-muted-soft">{{ t('about.clean_energy_copy') }}</p>
         </div>
       </div>
       <div class="col-md-3">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge gold mx-auto"><i class="bi bi-hand-holding-heart"></i></div>
-          <h6>Solidarité</h6>
-          <p class="small text-muted-soft">Une action humanitaire ancrée dans la dignité humaine.</p>
+          <h6>{{ t('about.solidarity_title') }}</h6>
+          <p class="small text-muted-soft">{{ t('about.solidarity_copy') }}</p>
         </div>
       </div>
     </div>
@@ -58,8 +57,8 @@
 <section class="section bg-soft">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Notre impact</span>
-      <h2 class="mt-2">CHERE en chiffres</h2>
+      <span class="eyebrow">{{ t('about.impact') }}</span>
+      <h2 class="mt-2">{{ t('about.in_numbers') }}</h2>
     </div>
     <div class="row text-center g-4">
       {% for s in stats %}
@@ -77,8 +76,8 @@
 <section class="section">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Notre équipe</span>
-      <h2 class="mt-2">Leadership</h2>
+      <span class="eyebrow">{{ t('about.team') }}</span>
+      <h2 class="mt-2">{{ t('about.leadership') }}</h2>
     </div>
     <div class="row g-4">
       {% for member in team %}

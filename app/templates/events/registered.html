@@ -8,32 +8,32 @@
             <div class="text-center mb-4">
                 <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
                 {% if participant.status == 'confirmed' %}
-                    <h1 class="display-5 mt-3 text-success">Inscription confirmée!</h1>
-                    <p class="lead text-muted">Merci pour votre inscription à cet événement.</p>
+                    <h1 class="display-5 mt-3 text-success">{{ t('events.registered.confirmed_title') }}</h1>
+                    <p class="lead text-muted">{{ t('events.registered.confirmed_subtitle') }}</p>
                 {% else %}
-                    <h1 class="display-5 mt-3 text-warning">Inscription enregistrée</h1>
-                    <p class="lead text-muted">Votre inscription est enregistrée, mais elle n'est pas encore confirmée.</p>
+                    <h1 class="display-5 mt-3 text-warning">{{ t('events.registered.pending_title') }}</h1>
+                    <p class="lead text-muted">{{ t('events.registered.pending_subtitle') }}</p>
                 {% endif %}
             </div>
 
             <!-- Résumé de l'événement et de l'inscription -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Résumé de votre inscription</h5>
+                    <h5 class="mb-0">{{ t('events.registered.summary') }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Événement</small>
+                            <small class="text-muted">{{ t('events.registered.event') }}</small>
                             <p class="h6 mb-0"><strong>{{ event.title }}</strong></p>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Statut</small>
+                            <small class="text-muted">{{ t('events.registered.status') }}</small>
                             <p class="mb-0">
                                 {% if participant.status == 'confirmed' %}
-                                    <span class="badge bg-success">Confirmé</span>
+                                    <span class="badge bg-success">{{ t('events.registered.confirmed') }}</span>
                                 {% elif participant.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">En attente de paiement</span>
+                                    <span class="badge bg-warning text-dark">{{ t('events.registered.pending_payment') }}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ participant.status|capitalize }}</span>
                                 {% endif %}
@@ -45,23 +45,23 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Participant</small>
+                            <small class="text-muted">{{ t('events.registered.participant') }}</small>
                             <p class="mb-0"><strong>{{ participant.full_name }}</strong></p>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Email</small>
+                            <small class="text-muted">{{ t('events.registered.email') }}</small>
                             <p class="mb-0"><strong>{{ participant.email }}</strong></p>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Date de l'événement</small>
-                            <p class="mb-0"><strong>{{ event.event_date.strftime('%d %b %Y à %H:%M') if event.event_date else 'À déterminer' }}</strong></p>
+                            <small class="text-muted">{{ t('events.registered.event_date') }}</small>
+                            <p class="mb-0"><strong>{{ format_datetime(event.event_date) }}</strong></p>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <small class="text-muted">Lieu</small>
-                            <p class="mb-0"><strong>{{ event.location or 'À déterminer' }}</strong></p>
+                            <small class="text-muted">{{ t('events.detail.location') }}</small>
+                            <p class="mb-0"><strong>{{ event.location or t('common.to_be_announced') }}</strong></p>
                         </div>
                     </div>
 
@@ -69,12 +69,12 @@
                         <hr>
                         <div class="row">
                             <div class="col-md-6">
-                                <small class="text-muted">Montant payé</small>
+                                <small class="text-muted">{{ t('events.registered.amount_paid') }}</small>
                                 <p class="h6 mb-0 text-success"><strong>{{ event.price }} RWF</strong></p>
                             </div>
                             <div class="col-md-6">
-                                <small class="text-muted">Date de paiement</small>
-                                <p class="mb-0"><strong>{{ participant.confirmation_date.strftime('%d %b %Y') if participant.confirmation_date else 'Confirmé' }}</strong></p>
+                                <small class="text-muted">{{ t('events.registered.payment_date') }}</small>
+                                <p class="mb-0"><strong>{{ format_date(participant.confirmation_date, fallback_key='events.registered.confirmed_short') }}</strong></p>
                             </div>
                         </div>
                     {% endif %}
@@ -84,7 +84,7 @@
             <!-- Étapes suivantes -->
             <div class="card shadow-sm mb-4 border-info">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-arrow-right"></i> Étapes suivantes</h5>
+                    <h5 class="mb-0"><i class="bi bi-arrow-right"></i> {{ t('events.registered.next_steps') }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-flex mb-3">
@@ -92,8 +92,8 @@
                             <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">1</span>
                         </div>
                         <div>
-                            <strong>Conservez vos informations</strong><br>
-                            <small class="text-muted">Gardez cette page ou notez l'adresse email <strong>{{ participant.email }}</strong> utilisée pour l'inscription.</small>
+                            <strong>{{ t('events.registered.keep_info') }}</strong><br>
+                            <small class="text-muted">{{ t('events.registered.keep_info_desc', email='<strong>' ~ participant.email ~ '</strong>')|safe }}</small>
                         </div>
                     </div>
                     <div class="d-flex mb-3">
@@ -101,8 +101,8 @@
                             <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">2</span>
                         </div>
                         <div>
-                            <strong>Présentez vos détails d'inscription</strong><br>
-                            <small class="text-muted">Votre nom complet et votre email peuvent être demandés à l'accueil de l'événement.</small>
+                            <strong>{{ t('events.registered.show_details') }}</strong><br>
+                            <small class="text-muted">{{ t('events.registered.show_details_desc') }}</small>
                         </div>
                     </div>
                     <div class="d-flex mb-3">
@@ -110,8 +110,8 @@
                             <span class="badge bg-primary rounded-pill" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">3</span>
                         </div>
                         <div>
-                            <strong>Arrivez en avance</strong><br>
-                            <small class="text-muted">Présentez-vous 15 minutes avant le début de l'événement</small>
+                            <strong>{{ t('events.registered.arrive_early') }}</strong><br>
+                            <small class="text-muted">{{ t('events.registered.arrive_early_desc') }}</small>
                         </div>
                     </div>
                 </div>
@@ -120,46 +120,46 @@
             <!-- FAQ -->
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">Questions fréquentes</h5>
+                    <h5 class="mb-0">{{ t('events.registered.faq') }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="accordion" id="faqAccordion">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqOne">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqOneCollapse">
-                                    <i class="bi bi-pencil me-2"></i> Puis-je modifier mes informations?
+                                    <i class="bi bi-pencil me-2"></i> {{ t('events.registered.edit_question') }}
                                 </button>
                             </h2>
                             <div id="faqOneCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Oui, vous pouvez modifier votre inscription en contactant notre équipe support avant la date de l'événement.
+                                    {{ t('events.registered.edit_answer') }}
                                 </div>
                             </div>
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqTwo">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwoCollapse">
-                                    <i class="bi bi-x-lg me-2"></i> Puis-je annuler mon inscription?
+                                    <i class="bi bi-x-lg me-2"></i> {{ t('events.registered.cancel_question') }}
                                 </button>
                             </h2>
                             <div id="faqTwoCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Les annulations sont acceptées jusqu'à 48 heures avant l'événement. Un remboursement sera traité selon nos conditions.
+                                    {{ t('events.registered.cancel_answer') }}
                                 </div>
                             </div>
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqThree">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThreeCollapse">
-                                    <i class="bi bi-geo-alt me-2"></i> Où se déroule l'événement?
+                                    <i class="bi bi-geo-alt me-2"></i> {{ t('events.registered.where_question') }}
                                 </button>
                             </h2>
                             <div id="faqThreeCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
                                     {% if event.location %}
-                                        L'adresse exacte est: <strong>{{ event.location }}</strong>.
+                                        {{ t('events.registered.where_answer_prefix') }} <strong>{{ event.location }}</strong>.
                                     {% else %}
-                                        Le lieu exact sera communiqué sur la page de l'événement lorsqu'il sera confirmé.
+                                        {{ t('events.registered.where_answer_pending') }}
                                     {% endif %}
                                 </div>
                             </div>
@@ -172,12 +172,12 @@
             <div class="row mt-5">
                 <div class="col-md-6">
                     <a href="{{ url_for('events.index') }}" class="btn btn-outline-primary btn-lg w-100">
-                        <i class="bi bi-calendar3"></i> Voir d'autres événements
+                        <i class="bi bi-calendar3"></i> {{ t('events.registered.other_events') }}
                     </a>
                 </div>
                 <div class="col-md-6">
                     <a href="{{ url_for('home.index') }}" class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-house"></i> Retour à l'accueil
+                        <i class="bi bi-house"></i> {{ t('events.registered.back_home') }}
                     </a>
                 </div>
             </div>

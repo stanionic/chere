@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Énergies renouvelables — {{ site_name }}{% endblock %}
+{% block title %}{{ t('renewable.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <section class="section-sm text-white" style="background:linear-gradient(135deg,#0e9f6e,#0b7355);">
   <div class="container">
     <div class="page-hero-flex">
       <div class="page-hero-text text-center text-lg-start">
-        <span class="eyebrow" style="color:var(--gold-light)">Pilier n°2</span>
-        <h1 class="mt-2">Énergies renouvelables</h1>
+        <span class="eyebrow" style="color:var(--gold-light)">{{ t('renewable.pillar') }}</span>
+        <h1 class="mt-2">{{ t('renewable.title') }}</h1>
         <p class="lead text-white-50" style="max-width:560px;">
-          Nous accélérons la transition énergétique mondiale avec des solutions propres,
-          accessibles et durables.
+          {{ t('renewable.lead') }}
         </p>
       </div>
       <div class="page-hero-art">
-        <img src="{{ url_for('static', filename='img/illustrations/renewable.svg') }}" alt="Énergies renouvelables" class="illustration illustration-sm">
+        <img src="{{ url_for('static', filename='img/illustrations/renewable.svg') }}" alt="{{ t('renewable.alt') }}" class="illustration illustration-sm">
       </div>
     </div>
   </div>
@@ -51,8 +50,8 @@
 
 <section class="section bg-soft text-center">
   <div class="container">
-    <h2 class="mb-3">Un projet énergétique à financer ou déployer ?</h2>
-    <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">Contactez notre équipe</a>
+      <h2 class="mb-3">{{ t('renewable.cta') }}</h2>
+      <a href="{{ url_for('contact.index') }}" class="btn btn-chere btn-lg">{{ t('common.contact_team') }}</a>
   </div>
 </section>
 

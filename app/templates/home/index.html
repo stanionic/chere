@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ t('home.title') }} — {{ site_name }}{% endblock %}
 {% block content %}
 
 <!-- ============ HERO ============ -->
@@ -12,26 +13,25 @@
     <div class="row align-items-center gy-5">
       <div class="col-lg-6">
         <span class="badge-pill text-white d-inline-block mb-3">
-          <i class="bi bi-stars me-1"></i> Une entreprise sociale internationale
+          <i class="bi bi-stars me-1"></i> {{ t('home.hero_badge') }}
         </span>
         <h1 class="display-4 fw-bold text-white mb-3">
-          Transformer le monde par l'<span style="color:var(--gold-light)">innovation</span>,
-          l'<span style="color:var(--gold-light)">énergie</span> et l'<span style="color:var(--gold-light)">humanité</span>.
+          {{ t('home.hero_title') }}
         </h1>
         <p class="lead text-white-50 mb-4">
           CHERE — Community • Humanity • Empowerment • Resources • Environment.
         </p>
         <div class="d-flex flex-wrap gap-3">
           <a href="{{ url_for('about.index') }}" class="btn btn-gold btn-lg">
-            <i class="bi bi-compass me-2"></i>Explore CHERE
+            <i class="bi bi-compass me-2"></i>{{ t('common.explore_chere') }}
           </a>
           <a href="{{ url_for('projects.index') }}" class="btn btn-outline-light btn-lg rounded-pill">
-            <i class="bi bi-geo-alt me-2"></i>Nos projets
+            <i class="bi bi-geo-alt me-2"></i>{{ t('home.hero_projects') }}
           </a>
         </div>
       </div>
       <div class="col-lg-6 text-center">
-        <img src="{{ url_for('static', filename='img/illustrations/hero-global.svg') }}" alt="Réseau mondial CHERE" class="illustration">
+        <img src="{{ url_for('static', filename='img/illustrations/hero-global.svg') }}" alt="{{ t('home.hero_alt') }}" class="illustration">
       </div>
     </div>
   </div>
@@ -41,29 +41,29 @@
 <section class="section">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Notre raison d'être</span>
-      <h2 class="mt-2">Mission • Vision • Valeurs</h2>
+      <span class="eyebrow">{{ t('home.reason') }}</span>
+      <h2 class="mt-2">{{ t('home.mvv') }}</h2>
     </div>
     <div class="row g-4">
       <div class="col-md-4">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge mx-auto"><i class="bi bi-bullseye"></i></div>
-          <h5>Mission</h5>
-          <p class="text-muted-soft small">Créer un impact durable à travers l'innovation, l'énergie propre et la solidarité.</p>
+          <h5>{{ t('home.mission_title') }}</h5>
+          <p class="text-muted-soft small">{{ t('home.mission_copy') }}</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge gold mx-auto"><i class="bi bi-eye"></i></div>
-          <h5>Vision</h5>
-          <p class="text-muted-soft small">Un monde connecté, résilient et équitable pour toutes les communautés.</p>
+          <h5>{{ t('home.vision_title') }}</h5>
+          <p class="text-muted-soft small">{{ t('home.vision_copy') }}</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card-glass p-4 text-center">
           <div class="icon-badge mx-auto"><i class="bi bi-gem"></i></div>
-          <h5>Valeurs</h5>
-          <p class="text-muted-soft small">Intégrité, innovation, inclusion et impact mesurable.</p>
+          <h5>{{ t('home.values_title') }}</h5>
+          <p class="text-muted-soft small">{{ t('home.values_copy') }}</p>
         </div>
       </div>
     </div>
@@ -98,8 +98,8 @@
 <section class="section">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Ce qui nous définit</span>
-      <h2 class="mt-2">Les 3 piliers de CHERE</h2>
+      <span class="eyebrow">{{ t('home.what_defines_us') }}</span>
+      <h2 class="mt-2">{{ t('home.three_pillars') }}</h2>
     </div>
 
     <!-- Innovation -->
@@ -115,7 +115,7 @@
         </div>
         {% endfor %}
       </div>
-      <div class="text-center mt-3"><a href="{{ url_for('innovation.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Innovation</a></div>
+      <div class="text-center mt-3"><a href="{{ url_for('innovation.index') }}" class="btn btn-outline-chere btn-sm">{{ t('home.discover_innovation') }}</a></div>
     </div>
 
     <!-- Énergies renouvelables -->
@@ -131,7 +131,7 @@
         </div>
         {% endfor %}
       </div>
-      <div class="text-center mt-3"><a href="{{ url_for('renewable.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Énergie</a></div>
+      <div class="text-center mt-3"><a href="{{ url_for('renewable.index') }}" class="btn btn-outline-chere btn-sm">{{ t('home.discover_energy') }}</a></div>
     </div>
 
     <!-- Humanitaire -->
@@ -147,7 +147,7 @@
         </div>
         {% endfor %}
       </div>
-      <div class="text-center mt-3"><a href="{{ url_for('humanitarian.index') }}" class="btn btn-outline-chere btn-sm">Découvrir l'Humanitaire</a></div>
+      <div class="text-center mt-3"><a href="{{ url_for('humanitarian.index') }}" class="btn btn-outline-chere btn-sm">{{ t('home.discover_humanitarian') }}</a></div>
     </div>
   </div>
 </section>
@@ -156,14 +156,20 @@
 <section class="section bg-soft">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Domaines d'intervention</span>
-      <h2 class="mt-2">Nos secteurs</h2>
+      <span class="eyebrow">{{ t('home.intervention_areas') }}</span>
+      <h2 class="mt-2">{{ t('home.our_sectors') }}</h2>
     </div>
     <div class="row g-4">
       {% set default_sectors = [
-        ("Agriculture","bi-flower1"), ("Tourisme","bi-airplane"), ("Éducation","bi-mortarboard"),
-        ("Business","bi-briefcase"), ("Technologie","bi-cpu"), ("Santé","bi-heart-pulse"),
-        ("Énergie renouvelable","bi-lightning-charge"), ("Environnement","bi-tree"),
+        ("Agriculture","bi-flower1"), ("Tourism","bi-airplane"), ("Education","bi-mortarboard"),
+        ("Business","bi-briefcase"), ("Technology","bi-cpu"), ("Health","bi-heart-pulse"),
+        ("Renewable Energy","bi-lightning-charge"), ("Environment","bi-tree"),
+        ("Humanitarian","bi-hand-holding-heart"), ("Construction","bi-building"),
+        ("Finance","bi-cash-coin"), ("Transport","bi-truck")
+      ] if current_locale == 'en' else [
+        ("Agriculture","bi-flower1"), ("Tourisme","bi-airplane"), ("Education","bi-mortarboard"),
+        ("Business","bi-briefcase"), ("Technologie","bi-cpu"), ("Sante","bi-heart-pulse"),
+        ("Energie renouvelable","bi-lightning-charge"), ("Environnement","bi-tree"),
         ("Humanitaire","bi-hand-holding-heart"), ("Construction","bi-building"),
         ("Finance","bi-cash-coin"), ("Transport","bi-truck")
       ] %}
@@ -174,7 +180,7 @@
             <div class="sector-icon"><i class="bi {{ s.icon }}"></i></div>
             <h6>{{ s.name }}</h6>
             <p class="small text-muted-soft mb-2">{{ s.short_description }}</p>
-            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">En savoir plus</a>
+            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">{{ t('common.learn_more') }}</a>
           </div>
         </div>
         {% endfor %}
@@ -184,8 +190,8 @@
           <div class="card-glass p-4 text-center">
             <div class="sector-icon"><i class="bi {{ icon }}"></i></div>
             <h6>{{ name }}</h6>
-            <p class="small text-muted-soft mb-2">Solutions durables et innovantes déployées à l'échelle mondiale.</p>
-            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">En savoir plus</a>
+            <p class="small text-muted-soft mb-2">{{ t('home.sector_fallback') }}</p>
+            <a href="{{ url_for('services.index') }}" class="btn btn-outline-chere btn-sm">{{ t('common.learn_more') }}</a>
           </div>
         </div>
         {% endfor %}
@@ -198,8 +204,8 @@
 <section class="section">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Présence mondiale</span>
-      <h2 class="mt-2">CHERE intervient partout dans le monde</h2>
+      <span class="eyebrow">{{ t('home.global_presence') }}</span>
+      <h2 class="mt-2">{{ t('home.world_title') }}</h2>
     </div>
     <div id="world-map"></div>
   </div>
@@ -209,10 +215,19 @@
 <section class="section bg-soft">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Ce qui arrive</span>
-      <h2 class="mt-2">Coming Soon</h2>
+      <span class="eyebrow">{{ t('home.coming') }}</span>
+      <h2 class="mt-2">{{ t('home.coming_soon') }}</h2>
     </div>
     <div class="row g-4">
+      {% set coming_soon_defaults = [
+        ("Solar Mini-Grid Network", "Multi-country"),
+        ("Digital Skills Academy", "Global"),
+        ("Climate Resilience Hub", "Multi-continent")
+      ] if current_locale == 'en' else [
+        ("Solar Mini-Grid Network", "Multi-pays"),
+        ("Digital Skills Academy", "Global"),
+        ("Climate Resilience Hub", "Multi-continent")
+      ] %}
       {% for p in coming_soon %}
       <div class="col-md-4">
         <div class="card-glass p-4">
@@ -223,12 +238,12 @@
         </div>
       </div>
       {% else %}
-      {% for title, country in [("Solar Mini-Grid Network","Multi-pays"), ("Digital Skills Academy","Global"), ("Climate Resilience Hub","Multi-continent")] %}
+      {% for title, country in coming_soon_defaults %}
       <div class="col-md-4">
         <div class="card-glass p-4">
           <div class="icon-badge"><i class="bi bi-hourglass-split"></i></div>
           <h5>{{ title }}</h5>
-          <p class="small text-muted-soft">Un nouveau projet CHERE en préparation, porteur d'impact durable.</p>
+          <p class="small text-muted-soft">{{ t('home.coming_fallback') }}</p>
           <span class="badge rounded-pill" style="background:var(--gold); color:var(--elegant-black);">{{ country }}</span>
         </div>
       </div>
@@ -242,16 +257,17 @@
 <section class="section-sm">
   <div class="container">
     <div class="text-center mb-4">
-      <span class="eyebrow">Ils nous font confiance</span>
-      <h2 class="mt-2">Partenaires</h2>
+      <span class="eyebrow">{{ t('home.trusted_by') }}</span>
+      <h2 class="mt-2">{{ t('home.partners_title') }}</h2>
     </div>
     <div class="d-flex flex-wrap justify-content-center align-items-center gap-5 opacity-75">
+      {% set partner_defaults = ["Partner NGOs", "Universities", "Companies", "Institutions", "Banks"] if current_locale == 'en' else ["ONG Partenaires", "Universites", "Entreprises", "Institutions", "Banques"] %}
       {% if partners %}
         {% for p in partners %}
           <div class="text-center small fw-semibold">{{ p.name }}</div>
         {% endfor %}
       {% else %}
-        {% for name in ["ONG Partenaires", "Universités", "Entreprises", "Institutions", "Banques"] %}
+        {% for name in partner_defaults %}
           <div class="text-center small fw-semibold"><i class="bi bi-building me-1"></i>{{ name }}</div>
         {% endfor %}
       {% endif %}
@@ -263,8 +279,8 @@
 <section class="section bg-soft">
   <div class="container">
     <div class="text-center mb-5">
-      <span class="eyebrow">Actualités</span>
-      <h2 class="mt-2">Depuis le blog CHERE</h2>
+      <span class="eyebrow">{{ t('home.news') }}</span>
+      <h2 class="mt-2">{{ t('home.blog_title') }}</h2>
     </div>
     <div class="row g-4">
       {% for a in articles %}
@@ -273,13 +289,13 @@
           <span class="badge bg-primary-subtle text-primary mb-2">{{ a.category }}</span>
           <h6>{{ a.title }}</h6>
           <p class="small text-muted-soft">{{ a.excerpt }}</p>
-          <a href="{{ url_for('blog.detail', slug=a.slug) }}" class="btn btn-outline-chere btn-sm">Lire l'article</a>
+          <a href="{{ url_for('blog.detail', slug=a.slug) }}" class="btn btn-outline-chere btn-sm">{{ t('home.read_article') }}</a>
         </div>
       </div>
       {% else %}
       <div class="col-12 text-center text-muted-soft">
         <i class="bi bi-journal-richtext fs-1 mb-2 d-block"></i>
-        Les articles seront bientôt publiés depuis l'espace d'administration.
+        {{ t('home.blog_empty') }}
       </div>
       {% endfor %}
     </div>
@@ -289,9 +305,9 @@
 <!-- ============ CTA FINAL ============ -->
 <section class="section text-center text-white" style="background:linear-gradient(135deg,var(--royal-blue),var(--royal-blue-dark));">
   <div class="container">
-    <h2 class="mb-3">Rejoignez le mouvement CHERE</h2>
-    <p class="lead text-white-50 mb-4">Investisseurs, gouvernements, ONG, entreprises ou particuliers — construisons ensemble un avenir durable.</p>
-    <a href="{{ url_for('contact.index') }}" class="btn btn-gold btn-lg"><i class="bi bi-send me-2"></i>Nous contacter</a>
+    <h2 class="mb-3">{{ t('home.final_cta_title') }}</h2>
+    <p class="lead text-white-50 mb-4">{{ t('home.final_cta_copy') }}</p>
+    <a href="{{ url_for('contact.index') }}" class="btn btn-gold btn-lg"><i class="bi bi-send me-2"></i>{{ t('common.contact_us') }}</a>
   </div>
 </section>
 
@@ -303,10 +319,10 @@
   <div class="events-popup-inner">
     <div class="events-popup-header">
       <div>
-        <span class="eyebrow" style="color:var(--gold-light);">À venir</span>
-        <h5 id="popup-title" class="mb-0 text-white">Prochains événements</h5>
+        <span class="eyebrow" style="color:var(--gold-light);">{{ t('common.upcoming') }}</span>
+        <h5 id="popup-title" class="mb-0 text-white">{{ t('common.upcoming_events') }}</h5>
       </div>
-      <button class="events-popup-close" id="closePopup" aria-label="Fermer">&times;</button>
+      <button class="events-popup-close" id="closePopup" aria-label="{{ t('common.close') }}">&times;</button>
     </div>
     <div class="events-popup-body">
       {% for event in upcoming_events %}
@@ -326,7 +342,7 @@
             {% if event.is_paid %}
               <span class="event-price">{{ "%.0f"|format(event.price) }} RWF</span>
             {% else %}
-              <span class="event-free">Gratuit</span>
+              <span class="event-free">{{ t('home.popup_free') }}</span>
             {% endif %}
           </div>
         </div>
@@ -336,7 +352,7 @@
     </div>
     <div class="events-popup-footer">
       <a href="{{ url_for('barista.index') }}" class="btn btn-gold btn-sm w-100">
-        <i class="bi bi-calendar-event me-1"></i>Voir tous les événements
+        <i class="bi bi-calendar-event me-1"></i>{{ t('common.view_all_events') }}
       </a>
     </div>
   </div>

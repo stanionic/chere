@@ -3,6 +3,7 @@ from app.blueprints.contact import contact_bp
 from app.blueprints.contact.forms import ContactForm, NewsletterForm
 from app.models import Message, NewsletterSubscriber
 from app.extensions import db
+from app.i18n import translate
 
 
 @contact_bp.route("/", methods=["GET", "POST"])
@@ -17,7 +18,7 @@ def index():
         )
         db.session.add(message)
         db.session.commit()
-        flash("Merci ! Votre message a bien été envoyé à l'équipe CHERE.", "success")
+        flash(translate("contact.flash.message_sent"), "success")
         return redirect(url_for("contact.index"))
     return render_template("contact/index.html", form=form)
 
@@ -30,7 +31,7 @@ def newsletter():
         if not existing:
             db.session.add(NewsletterSubscriber(email=form.email.data))
             db.session.commit()
-        flash("Merci pour votre inscription à la newsletter CHERE !", "success")
+        flash(translate("contact.flash.newsletter_subscribed"), "success")
     else:
-        flash("Adresse email invalide.", "danger")
+        flash(translate("contact.flash.invalid_email"), "danger")
     return redirect(url_for("home.index"))

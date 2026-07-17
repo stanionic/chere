@@ -5,6 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, FloatField, SelectField
 from wtforms.validators import DataRequired, Email, Length, Regexp, Optional
 from wtforms.widgets import TextArea
+from app.i18n import translate
 
 
 class EventRegistrationForm(FlaskForm):
@@ -29,6 +30,29 @@ class EventRegistrationForm(FlaskForm):
     )
     submit = SubmitField("S'inscrire à l'événement")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.full_name.label.text = translate("events.form.full_name")
+        self.full_name.render_kw = {"placeholder": translate("events.form.full_name_placeholder")}
+        self.email.label.text = translate("events.form.email")
+        self.email.render_kw = {"placeholder": translate("events.form.email_placeholder")}
+        self.phone.label.text = translate("events.form.phone")
+        self.phone.render_kw = {"placeholder": translate("events.form.phone_placeholder")}
+        self.submit.label.text = translate("events.detail.register_now")
+
+        for field in (self.full_name, self.email, self.phone):
+            for validator in field.validators:
+                if isinstance(validator, DataRequired):
+                    validator.message = translate("validation.required")
+
+        for validator in self.email.validators:
+            if isinstance(validator, Email):
+                validator.message = translate("validation.invalid_email")
+
+        for validator in self.phone.validators:
+            if isinstance(validator, Regexp):
+                validator.message = translate("events.form.phone_format")
+
 
 class MoMoPaymentForm(FlaskForm):
     """Formulaire de paiement MoMo."""
@@ -44,6 +68,21 @@ class MoMoPaymentForm(FlaskForm):
         }
     )
     submit = SubmitField("Payer avec MoMo", render_kw={"class": "btn btn-primary btn-lg w-100"})
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.phone_number.label.text = translate("events.form.momo_number")
+        self.phone_number.render_kw = {
+            "placeholder": translate("events.form.momo_number_placeholder"),
+            "class": "form-control form-control-lg",
+        }
+        self.submit.label.text = translate("events.payment.pay_now")
+
+        for validator in self.phone_number.validators:
+            if isinstance(validator, DataRequired):
+                validator.message = translate("validation.required")
+            if isinstance(validator, Regexp):
+                validator.message = translate("events.form.momo_format")
 
 
 class EventCreationForm(FlaskForm):
