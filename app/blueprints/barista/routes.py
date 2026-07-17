@@ -1,9 +1,11 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash
+from flask import render_template, request, jsonify, redirect, url_for, flash, session
 from flask_login import login_required, current_user
 from app.blueprints.barista import barista_bp
-from app.models import Event, EventParticipant, Transaction
+from app.models import (
+    Event, EventParticipant, Transaction, 
+    BaristaMenu, BaristaOrder, BaristaOrderItem
+)
 from app.extensions import db
-from app.blueprints.barista.forms import EventRegistrationForm, MoMoPaymentForm
 from app.services.momo_service import momo_service
 from datetime import datetime
 import uuid
@@ -11,144 +13,147 @@ import uuid
 
 @barista_bp.route("/")
 def index():
-    """Liste tous les événements publiés."""
-    page = request.args.get("page", 1, type=int)
-    events = Event.query.filter_by(is_published=True).paginate(page=page, per_page=12)
-    return render_template("barista/index.html", events=events)
+    """Main Barista coffee ordering page."""
+    # Get menu items grouped by category
+    menu_items = BaristaMenu.query.filter_by(is_available=True).order_by(BaristaMenu.order).all()
+    categories = {}
+    for item in menu_items:
+        if item.category not in categories:
+            categories[item.category] = []
+        categories[item.category].append(item)
+    
+    return render_template("barista/index.html", categories=categories, menu_items=menu_items)
 
 
 @barista_bp.route("/event/<slug>")
-def event_detail(slug):
-    """Affiche les détails d'un événement."""
+def event_link(slug):
+    """Link to Barista from an event (e.g., Barista Coffee Experience)."""
     event = Event.query.filter_by(slug=slug).first_or_404()
-    form = EventRegistrationForm()
-    
-    # Vérifier si l'utilisateur est déjà inscrit
-    participant = None
-    if current_user.is_authenticated:
-        participant = EventParticipant.query.filter_by(
-            event_id=event.id,
-            email=current_user.email
-        ).first()
-    
-    return render_template(
-        "barista/event_detail.html",
-        event=event,
-        form=form,
-        participant=participant
-    )
+    return redirect(url_for("barista.index", event_id=event.id))
 
 
-@barista_bp.route("/event/<slug>/register", methods=["POST"])
-def register_event(slug):
-    """Enregistre un participant à un événement."""
-    event = Event.query.filter_by(slug=slug).first_or_404()
-    form = EventRegistrationForm()
-    
-    if not event.is_registration_open():
-        return jsonify({"success": False, "error": "Les inscriptions sont fermées"}), 400
-    
-    if form.validate_on_submit():
-        try:
-            # Vérifier les doublons
-            existing = EventParticipant.query.filter_by(
-                event_id=event.id,
-                email=form.email.data
-            ).first()
-            
-            if existing:
-                return jsonify({
-                    "success": False,
-                    "error": "Vous êtes déjà inscrit à cet événement"
-                }), 400
-            
-            # Vérifier le nombre max de participants
-            if event.max_participants:
-                participant_count = event.get_participant_count()
-                if participant_count >= event.max_participants:
-                    return jsonify({
-                        "success": False,
-                        "error": "L'événement est complet"
-                    }), 400
-            
-            # Créer le participant
-            participant = EventParticipant(
-                event_id=event.id,
-                full_name=form.full_name.data,
-                email=form.email.data,
-                phone=form.phone.data,
-                status="pending" if event.is_paid else "confirmed"
-            )
-            db.session.add(participant)
-            db.session.flush()
-            
-            # Si gratuit, confirmer immédiatement
-            if not event.is_paid:
-                participant.status = "confirmed"
-                participant.confirmation_date = datetime.utcnow()
-                db.session.commit()
-                return jsonify({
-                    "success": True,
-                    "message": "Inscription confirmée!",
-                    "redirect": url_for("barista.event_registered", event_id=participant.event_id)
-                })
-            else:
-                # Créer une transaction et rediriger vers le paiement
-                db.session.commit()
-                return jsonify({
-                    "success": True,
-                    "message": "Inscription enregistrée. Procédez au paiement.",
-                    "redirect": url_for("barista.payment", participant_id=participant.id)
-                })
-                
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({
-                "success": False,
-                "error": f"Erreur lors de l'inscription: {str(e)}"
-            }), 500
-    
-    return jsonify({
-        "success": False,
-        "errors": form.errors
-    }), 400
+@barista_bp.route("/api/menu")
+def get_menu():
+    """Get the barista menu as JSON (for frontend)."""
+    menu_items = BaristaMenu.query.filter_by(is_available=True).order_by(BaristaMenu.order).all()
+    categories = {}
+    for item in menu_items:
+        if item.category not in categories:
+            categories[item.category] = []
+        categories[item.category].append({
+            "id": item.id,
+            "name": item.name,
+            "description": item.description,
+            "price": item.price,
+            "icon": item.icon,
+        })
+    return jsonify({"success": True, "categories": categories})
 
 
-@barista_bp.route("/payment/<int:participant_id>")
-def payment(participant_id):
-    """Page de paiement MoMo."""
-    participant = EventParticipant.query.get_or_404(participant_id)
-    event = participant.event
-    form = MoMoPaymentForm()
-    
-    # Vérifier que l'événement est payant
-    if not event.is_paid:
-        flash("Cet événement est gratuit", "info")
-        return redirect(url_for("barista.event_registered", event_id=event.id))
-    
-    return render_template(
-        "barista/payment.html",
-        participant=participant,
-        event=event,
-        form=form,
-        amount=event.price
-    )
-
-
-@barista_bp.route("/api/payment/initiate", methods=["POST"])
-def initiate_payment():
-    """Initie une demande de paiement MoMo."""
+@barista_bp.route("/order", methods=["POST"])
+def create_order():
+    """Create a new coffee order."""
     data = request.json
-    participant_id = data.get("participant_id")
+    
+    # Parse cart
+    cart = data.get("cart", [])
+    if not cart:
+        return jsonify({"success": False, "error": "Le panier est vide"}), 400
+    
+    customer_name = data.get("customer_name")
+    if not customer_name:
+        return jsonify({"success": False, "error": "Veuillez entrer votre nom"}), 400
+    
+    customer_email = data.get("customer_email")
+    customer_phone = data.get("customer_phone")
+    event_id = data.get("event_id")
+    
+    try:
+        # Calculate total
+        total = 0.0
+        order_items_data = []
+        for item in cart:
+            menu_item = BaristaMenu.query.get(item["menu_item_id"])
+            if not menu_item or not menu_item.is_available:
+                return jsonify({"success": False, "error": f"Item {item.get('name')} is no longer available"}), 400
+            subtotal = menu_item.price * item.get("quantity", 1)
+            total += subtotal
+            order_items_data.append({
+                "menu_item": menu_item,
+                "quantity": item.get("quantity", 1),
+                "special_requests": item.get("special_requests", "")
+            })
+        
+        # Create order
+        order_number = f"CH-COF-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:4]}"
+        order = BaristaOrder(
+            order_number=order_number,
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            total_amount=total,
+            status="pending",
+            event_id=event_id
+        )
+        db.session.add(order)
+        db.session.flush()
+        
+        # Add order items
+        for item_data in order_items_data:
+            order_item = BaristaOrderItem(
+                order_id=order.id,
+                menu_item_id=item_data["menu_item"].id,
+                menu_item_name=item_data["menu_item"].name,
+                price=item_data["menu_item"].price,
+                quantity=item_data["quantity"],
+                special_requests=item_data["special_requests"]
+            )
+            db.session.add(order_item)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Commande créée avec succès",
+            "order_id": order.id,
+            "order_number": order_number,
+            "total_amount": total
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": f"Erreur lors de la création de la commande: {str(e)}"
+        }), 500
+
+
+@barista_bp.route("/order/<int:order_id>")
+def order_detail(order_id):
+    """Show order detail page."""
+    order = BaristaOrder.query.get_or_404(order_id)
+    return render_template("barista/confirm.html", order=order)
+
+
+@barista_bp.route("/order/<int:order_id>/payment")
+def order_payment(order_id):
+    """Payment page for coffee order."""
+    order = BaristaOrder.query.get_or_404(order_id)
+    
+    if order.status == "paid":
+        flash("Commande déjà payée", "info")
+        return redirect(url_for("barista.order_detail", order_id=order.id))
+    
+    return render_template("barista/payment.html", order=order)
+
+
+@barista_bp.route("/api/order/<int:order_id>/payment/initiate", methods=["POST"])
+def initiate_order_payment(order_id):
+    """Initiate MoMo payment for a coffee order."""
+    order = BaristaOrder.query.get_or_404(order_id)
+    data = request.json
     phone_number = data.get("phone_number")
     
-    participant = EventParticipant.query.get_or_404(participant_id)
-    event = participant.event
-    
-    if not event.is_paid:
-        return jsonify({"success": False, "error": "Événement gratuit"}), 400
-    
-    # Valider le numéro
     if not momo_service.validate_phone_number(phone_number):
         return jsonify({
             "success": False,
@@ -157,34 +162,30 @@ def initiate_payment():
         }), 400
     
     try:
-        # Générer un ID externe unique
-        external_id = f"evt_{event.id}_par_{participant.id}_{uuid.uuid4().hex[:8]}"
+        external_id = f"cof_{order.id}_{uuid.uuid4().hex[:8]}"
         
-        # Appeler l'API MoMo
         result = momo_service.request_to_pay(
-            amount=event.price,
+            amount=order.total_amount,
             phone_number=phone_number,
             external_id=external_id,
-            payer_message=f"Inscription {event.title}",
-            payee_note=f"Participant: {participant.full_name}"
+            payer_message=f"Commande {order.order_number}",
+            payee_note=f"Client: {order.customer_name}"
         )
         
         if result.get("success"):
-            # Créer/Mettre à jour la transaction
-            transaction = Transaction.query.filter_by(participant_id=participant_id).first()
+            transaction = Transaction(
+                amount=order.total_amount,
+                phone_number=momo_service.normalize_phone_number(phone_number),
+                status="pending"
+            )
+            if order.event_id:
+                transaction.event_id = order.event_id
+            db.session.add(transaction)
+            db.session.flush()
             
-            if not transaction:
-                transaction = Transaction(
-                    event_id=event.id,
-                    participant_id=participant_id,
-                    amount=event.price,
-                    phone_number=momo_service.normalize_phone_number(phone_number),
-                    status="pending"
-                )
-                db.session.add(transaction)
-            
+            order.transaction_id = transaction.id
+            order.status = "pending"
             transaction.momo_reference = result.get("reference_id")
-            transaction.status = "pending"
             transaction.response_data = result
             db.session.commit()
             
@@ -208,37 +209,39 @@ def initiate_payment():
         }), 500
 
 
-@barista_bp.route("/api/payment/verify/<int:transaction_id>")
-def verify_payment(transaction_id):
-    """Vérifie le statut d'une transaction."""
+@barista_bp.route("/api/order/payment/verify/<int:transaction_id>")
+def verify_order_payment(transaction_id):
+    """Verify payment status for a coffee order."""
     transaction = Transaction.query.get_or_404(transaction_id)
+    order = BaristaOrder.query.filter_by(transaction_id=transaction_id).first()
     
+    if not order:
+        return jsonify({"success": False, "error": "Commande non trouvée"}), 400
+        
     if not transaction.momo_reference:
         return jsonify({"success": False, "error": "Pas de référence MoMo"}), 400
     
     try:
-        # Vérifier le statut auprès de MoMo
         result = momo_service.get_transaction_status(transaction.momo_reference)
         
         if result.get("success"):
             status = result.get("status")
             
             if status == "SUCCESSFUL":
-                # Mettre à jour la transaction et le participant
                 transaction.status = "success"
                 transaction.paid_at = datetime.utcnow()
-                transaction.participant.status = "confirmed"
-                transaction.participant.confirmation_date = datetime.utcnow()
+                order.status = "paid"
                 db.session.commit()
                 
                 return jsonify({
                     "success": True,
                     "status": "paid",
-                    "message": "Paiement confirmé! Inscription validée.",
-                    "redirect": url_for("barista.event_registered", event_id=transaction.event_id)
+                    "message": "Paiement confirmé! Commande validée.",
+                    "redirect": url_for("barista.order_detail", order_id=order.id)
                 })
             elif status == "FAILED":
                 transaction.status = "failed"
+                order.status = "pending"
                 db.session.commit()
                 
                 return jsonify({
@@ -263,50 +266,3 @@ def verify_payment(transaction_id):
             "success": False,
             "error": str(e)
         }), 500
-
-
-@barista_bp.route("/event/<int:event_id>/registered")
-def event_registered(event_id):
-    """Page de confirmation d'inscription."""
-    event = Event.query.get_or_404(event_id)
-    
-    # Récupérer le dernier participant inscrit (de la session ou de l'utilisateur)
-    participant = EventParticipant.query.filter_by(event_id=event_id).order_by(
-        EventParticipant.registration_date.desc()
-    ).first()
-    
-    if not participant:
-        flash("Aucune inscription trouvée", "error")
-        return redirect(url_for("barista.index"))
-    
-    return render_template("barista/registered.html", event=event, participant=participant)
-
-
-@barista_bp.route("/api/payment/callback", methods=["POST"])
-def payment_callback():
-    """Webhook MoMo — appelé par MTN lors d'un changement de statut."""
-    data = request.json or {}
-    reference_id = data.get("referenceId")
-
-    if reference_id:
-        transaction = Transaction.query.filter_by(momo_reference=reference_id).first()
-        if transaction:
-            status = data.get("status", "").upper()
-            if status == "SUCCESSFUL":
-                transaction.status = "success"
-                transaction.paid_at = datetime.utcnow()
-                transaction.participant.status = "confirmed"
-                transaction.participant.confirmation_date = datetime.utcnow()
-            elif status == "FAILED":
-                transaction.status = "failed"
-            transaction.response_data = data
-            db.session.commit()
-
-    momo_service.handle_payment_callback(data)
-    return jsonify({"success": True}), 200
-
-
-@barista_bp.route("/card")
-def card():
-    """Page de carte pour compatibilité avec l'ancienne URL."""
-    return render_template("barista/card.html")

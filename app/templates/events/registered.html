@@ -6,7 +6,7 @@
         <div class="col-lg-8 offset-lg-2">
             <!-- Succès -->
             <div class="text-center mb-4">
-                <i class="fas fa-check-circle" style="font-size: 4rem; color: #28a745;"></i>
+                <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
                 {% if participant.status == 'confirmed' %}
                     <h1 class="display-5 mt-3 text-success">Inscription confirmée!</h1>
                     <p class="lead text-muted">Merci pour votre inscription à cet événement.</p>
@@ -84,7 +84,7 @@
             <!-- Étapes suivantes -->
             <div class="card shadow-sm mb-4 border-info">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-arrow-right"></i> Étapes suivantes</h5>
+                    <h5 class="mb-0"><i class="bi bi-arrow-right"></i> Étapes suivantes</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-flex mb-3">
@@ -127,7 +127,7 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqOne">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqOneCollapse">
-                                    <i class="fas fa-edit me-2"></i> Puis-je modifier mes informations?
+                                    <i class="bi bi-pencil me-2"></i> Puis-je modifier mes informations?
                                 </button>
                             </h2>
                             <div id="faqOneCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
@@ -139,7 +139,7 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqTwo">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwoCollapse">
-                                    <i class="fas fa-times me-2"></i> Puis-je annuler mon inscription?
+                                    <i class="bi bi-x-lg me-2"></i> Puis-je annuler mon inscription?
                                 </button>
                             </h2>
                             <div id="faqTwoCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
@@ -151,7 +151,7 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqThree">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThreeCollapse">
-                                    <i class="fas fa-map-marker-alt me-2"></i> Où se déroule l'événement?
+                                    <i class="bi bi-geo-alt me-2"></i> Où se déroule l'événement?
                                 </button>
                             </h2>
                             <div id="faqThreeCollapse" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
@@ -172,12 +172,12 @@
             <div class="row mt-5">
                 <div class="col-md-6">
                     <a href="{{ url_for('events.index') }}" class="btn btn-outline-primary btn-lg w-100">
-                        <i class="fas fa-calendar-alt"></i> Voir d'autres événements
+                        <i class="bi bi-calendar3"></i> Voir d'autres événements
                     </a>
                 </div>
                 <div class="col-md-6">
                     <a href="{{ url_for('home.index') }}" class="btn btn-primary btn-lg w-100">
-                        <i class="fas fa-home"></i> Retour à l'accueil
+                        <i class="bi bi-house"></i> Retour à l'accueil
                     </a>
                 </div>
             </div>

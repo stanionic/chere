@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} — CHERE{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  /* ---- reset inside the barista wrapper ---- */
+  #barista-root *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  #barista-root{
+    display:flex;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(200,155,60,0.18), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(166,67,45,0.16), transparent 45%),
+      #2B1B12;
+    padding: 24px 0 40px;
+  }
+  :root{
+    --espresso:#2B1B12;
+    --clay:#A6432D;
+    --cream:#EFE0C8;
+    --gold:#C89B3C;
+    --momo:#FFCC00;
+    --ink:#3A2A20;
+    --paper:#FBF4E7;
+    --line:rgba(43,27,18,0.14);
+    --good:#3e6b34;
+  }
+  .app{
+    width:100%;
+    max-width:420px;
+    min-height:80vh;
+    background:var(--paper);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  }
+  .cover{position:relative;height:200px;overflow:hidden;}
+  .cover img{width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block;}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(43,27,18,0.05) 0%,rgba(43,27,18,0.35) 55%,var(--espresso) 100%);}
+  .cover-caption{position:absolute;left:20px;bottom:14px;right:20px;color:var(--cream);z-index:2;}
+  .cover-caption .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin:0 0 3px;}
+  .cover-caption .line{font-size:12.5px;color:rgba(239,224,200,0.85);margin:0;}
+  .topbar{background:linear-gradient(135deg,var(--clay),#8a3524);color:var(--cream);padding:14px 20px 20px;}
+  .topbar-row{display:flex;align-items:center;justify-content:space-between;}
+  .brand-mark{font-family:'Fraunces',serif;font-weight:700;font-size:22px;}
+  .brand-mark span{color:var(--gold);}
+  .vendor-pill{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;background:rgba(239,224,200,0.15);padding:5px 10px;border-radius:999px;}
+  .topbar h1{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:14px 0 2px;}
+  .topbar p.tag{margin:0;font-size:13px;color:rgba(239,224,200,0.8);}
+  .tabbar{display:flex;background:var(--espresso);border-top:1px solid rgba(239,224,200,0.08);position:sticky;bottom:0;z-index:20;}
+  .tabbar button{flex:1;background:none;border:none;color:rgba(239,224,200,0.55);font-family:'Work Sans',sans-serif;font-weight:600;font-size:12.5px;padding:13px 4px 11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .tabbar button .ic{font-size:17px;}
+  .tabbar button.active{color:var(--gold);}
+  .tabbar button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
+  .view{display:none;flex:1;overflow-y:auto;padding-bottom:8px;}
+  .view.active{display:flex;flex-direction:column;}
+  .cat-nav{display:flex;gap:8px;overflow-x:auto;padding:14px 16px 4px;scrollbar-width:none;}
+  .cat-nav::-webkit-scrollbar{display:none;}
+  .cat-chip{flex:0 0 auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:7px 13px;border-radius:999px;background:var(--cream);color:var(--ink);border:1px solid var(--line);cursor:pointer;white-space:nowrap;}
+  .cat-chip.active{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
+  .cat-block{padding:6px 16px 2px;}
+  .cat-title{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin:16px 0 8px;display:flex;align-items:center;gap:8px;}
+  .cat-title::after{content:"";flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 11px);}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
+  .item-left{display:flex;align-items:center;gap:11px;min-width:0;}
+  .item-icon{width:38px;height:38px;border-radius:10px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;overflow:hidden;}
+  .item-icon img{width:100%;height:100%;object-fit:cover;display:block;}
+  .item-name{font-weight:600;font-size:14px;margin:0 0 2px;}
+  .item-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(58,42,32,0.6);margin:0;}
+  .item-add{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:none;background:var(--espresso);color:var(--cream);font-size:16px;cursor:pointer;}
+  .item-qty-ctl{display:flex;align-items:center;gap:8px;background:var(--cream);border-radius:999px;padding:3px;}
+  .item-qty-ctl button{width:24px;height:24px;border-radius:50%;border:none;background:var(--espresso);color:var(--cream);font-size:14px;cursor:pointer;}
+  .item-qty-ctl span{font-family:'IBM Plex Mono',monospace;font-size:12.5px;min-width:12px;text-align:center;}
+  .cart-bar{position:sticky;bottom:52px;margin:10px 16px 12px;background:var(--espresso);color:var(--cream);border-radius:14px;padding:12px 16px;display:none;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,0.35);cursor:pointer;border:none;width:calc(100% - 32px);font-family:'Work Sans',sans-serif;}
+  .cart-bar.show{display:flex;}
+  .cart-bar .cnt{background:var(--momo);color:var(--espresso);font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;margin-right:8px;}
+  .cart-bar .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .sheet-header{padding:16px 16px 6px;display:flex;align-items:center;gap:10px;}
+  .back-btn{background:var(--cream);border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;}
+  .sheet-header h2{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0;}
+  .cart-list{padding:6px 16px;}
+  .cart-line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13.5px;}
+  .cart-line .amt{font-family:'IBM Plex Mono',monospace;}
+  .totals{padding:10px 16px 2px;}
+  .totals-row{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;color:rgba(58,42,32,0.7);}
+  .totals-row.grand{border-top:1px solid var(--line);margin-top:4px;padding-top:12px;font-weight:700;font-size:16px;color:var(--ink);}
+  .totals-row .amt{font-family:'IBM Plex Mono',monospace;}
+  .totals-row.grand .amt{color:var(--clay);}
+  .pay-block{padding:14px 16px 20px;}
+  .merchant-card{background:var(--espresso);color:var(--cream);border-radius:14px;padding:14px;border:2px solid var(--momo);display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .momo-badge{width:38px;height:38px;border-radius:10px;background:var(--momo);color:var(--espresso);font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .merchant-copy strong{display:block;font-size:14px;}
+  .merchant-copy .num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:0.02em;}
+  .merchant-copy small{display:block;font-size:11px;color:rgba(239,224,200,0.6);margin-top:1px;}
+  .field label{display:block;font-size:12px;color:rgba(58,42,32,0.6);margin-bottom:6px;}
+  .phone-input-wrap{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;}
+  .phone-input-wrap:focus-within{border-color:var(--clay);}
+  .phone-prefix{font-family:'IBM Plex Mono',monospace;font-size:14px;padding:12px 10px 12px 14px;color:rgba(58,42,32,0.6);border-right:1px solid var(--line);}
+  .phone-input-wrap input{flex:1;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:14.5px;padding:12px 14px;background:transparent;color:var(--ink);min-width:0;}
+  .field-hint{font-size:11px;color:rgba(58,42,32,0.5);margin-top:6px;}
+  .pay-btn{width:100%;margin-top:16px;border:none;border-radius:14px;padding:15px;background:var(--clay);color:var(--cream);font-family:'Fraunces',serif;font-weight:600;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .pay-btn:active{transform:scale(0.98);}
+  .pay-btn .amt{font-family:'IBM Plex Mono',monospace;color:var(--momo);}
+  .pay-btn[disabled]{opacity:0.7;cursor:default;}
+  .status{margin-top:14px;padding:13px;border-radius:12px;background:rgba(166,67,45,0.08);border:1px solid rgba(166,67,45,0.25);font-size:13px;color:var(--clay);display:none;align-items:center;gap:10px;}
+  .status.show{display:flex;}
+  .status.success{background:rgba(70,120,60,0.1);border-color:rgba(70,120,60,0.3);color:var(--good);}
+  .spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(166,67,45,0.25);border-top-color:var(--clay);flex:0 0 auto;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .share-view{padding:20px 20px 30px;text-align:center;}
+  .share-view h2{font-family:'Fraunces',serif;font-size:20px;margin:4px 0 4px;}
+  .share-view p.desc{font-size:13px;color:rgba(58,42,32,0.6);margin:0 0 20px;}
+  .qr-frame{background:var(--espresso);border-radius:20px;padding:22px;display:inline-flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 18px 40px rgba(0,0,0,0.35);}
+  .qr-box{background:#fff;padding:12px;border-radius:12px;}
+  .qr-frame .qr-label{color:var(--cream);font-family:'Fraunces',serif;font-weight:600;font-size:15px;}
+  .qr-frame .qr-sub{color:rgba(239,224,200,0.6);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;}
+  .url-field{margin-top:22px;text-align:left;}
+  .url-field label{display:block;font-size:12px;color:rgba(58,42,32,0.6);margin-bottom:6px;}
+  .url-field .row{display:flex;gap:8px;}
+  .url-field input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;outline:none;}
+  .url-field input:focus{border-color:var(--clay);}
+  .url-field button{border:none;background:var(--espresso);color:var(--cream);border-radius:10px;padding:0 14px;font-size:12.5px;font-weight:600;cursor:pointer;}
+  .hint-note{font-size:11px;color:rgba(58,42,32,0.5);margin-top:8px;text-align:left;}
+  @media(prefers-reduced-motion:reduce){.spinner{animation:none;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="barista-root">
+  <div class="app">
+
+    <div class="cover">
+      <img src="{{ event.cover_image or 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' }}" alt="{{ event.title }}">
+      <div class="cover-caption">
+        <p class="eyebrow">Now serving</p>
+        <p class="line">{{ event.location or 'CHERE Hub, Kigali' }}</p>
+      </div>
+    </div>
+
+    <div class="topbar">
+      <div class="topbar-row">
+        <div class="brand-mark">Ch<span>e</span>re</div>
+        <div class="vendor-pill" id="merchantPill">MoMo · 078 155 235</div>
+      </div>
+      <h1>Barista</h1>
+      <p class="tag">Full menu · order ahead · pay with MoMo</p>
+    </div>
+
+    <!-- MENU VIEW -->
+    <div class="view active" id="view-menu">
+      <div class="cat-nav" id="catNav"></div>
+      <div id="menuList"></div>
+    </div>
+
+    <!-- CHECKOUT VIEW -->
+    <div class="view" id="view-checkout">
+      <div class="sheet-header">
+        <button class="back-btn" id="backToMenu">←</button>
+        <h2>Your order</h2>
+      </div>
+      <div class="cart-list" id="cartList"></div>
+      <div class="totals">
+        <div class="totals-row"><span>Subtotal</span><span class="amt" id="coSubtotal">RWF 0</span></div>
+        <div class="totals-row"><span>Service fee</span><span class="amt" id="coFee">RWF 200</span></div>
+        <div class="totals-row grand"><span>Total due</span><span class="amt" id="coTotal">RWF 0</span></div>
+      </div>
+      <div class="pay-block">
+        <div class="merchant-card">
+          <div class="momo-badge">MoMo</div>
+          <div class="merchant-copy">
+            <strong>Pay to Barista (Chere)</strong>
+            <div class="num" id="merchantNum">078 155 235</div>
+            <small>MTN Mobile Money · Chere merchant code</small>
+          </div>
+        </div>
+        <div class="field">
+          <label for="customerName">Your name</label>
+          <div class="phone-input-wrap">
+            <input type="text" id="customerName" placeholder="Enter your full name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="momoPhone">Your MoMo phone number</label>
+          <div class="phone-input-wrap">
+            <span class="phone-prefix">+250</span>
+            <input type="tel" id="momoPhone" inputmode="numeric" placeholder="78 000 0000" maxlength="12">
+          </div>
+          <p class="field-hint">You'll get a prompt on this number to approve the payment.</p>
+        </div>
+        <button class="pay-btn" id="payBtn">Pay <span class="amt" id="payAmt">RWF 0</span> with MoMo</button>
+        <div class="status" id="statusBox">
+          <div class="spinner"></div>
+          <span id="statusText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARE / QR VIEW -->
+    <div class="view" id="view-share">
+      <div class="share-view">
+        <h2>Scan to order Barista</h2>
+        <p class="desc">Print this on a table tent so customers can jump straight into the menu.</p>
+        <div class="qr-frame">
+          <div class="qr-box" id="qrBox"></div>
+          <div class="qr-label">Barista · Chere</div>
+          <div class="qr-sub" id="qrUrlLabel">CHERE.APP/BARISTA</div>
+        </div>
+        <div class="url-field">
+          <label for="qrUrlInput">Page link this QR points to</label>
+          <div class="row">
+            <input type="text" id="qrUrlInput" value="{{ request.url }}">
+            <button id="qrUpdateBtn">Update</button>
+          </div>
+          <p class="hint-note">Swap in the live URL then tap Update to regenerate the code.</p>
+        </div>
+      </div>
+    </div>
+
+    <button class="cart-bar" id="cartBar">
+      <span><span class="cnt" id="cartCount">0</span>items in cart</span>
+      <span class="amt" id="cartAmt">RWF 0</span>
+    </button>
+
+    <div class="tabbar">
+      <button class="active" data-view="menu"><span class="ic">☕</span>Menu</button>
+      <button data-view="share"><span class="ic">▦</span>QR</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MERCHANT_NUMBER = "078155235";
+const SERVICE_FEE = 0; // We'll use the actual backend total
+const BARISTA_BASE = "{{ url_for('barista.index') }}".replace(/\/$/, "");
+let MENU = {};
+let cart = {};
+let currentOrderId = null;
+
+function fmt(n){ return "RWF " + n.toLocaleString("en-US"); }
+
+// Fetch menu from backend
+async function fetchMenu(){
+  try {
+    const response = await fetch("{{ url_for('barista.get_menu') }}");
+    const data = await response.json();
+    if(data.success) {
+      MENU = data.categories;
+      buildMenu();
+    }
+  } catch(e){
+    console.error("Failed to fetch menu", e);
+  }
+}
+
+function buildMenu(){
+  const nav = document.getElementById("catNav");
+  const list = document.getElementById("menuList");
+  nav.innerHTML="";
+  list.innerHTML="";
+  const cats = Object.keys(MENU);
+  cats.forEach((cat,i)=>{
+    const chip = document.createElement("button");
+    chip.className = "cat-chip" + (i===0?" active":"");
+    chip.textContent = cat;
+    chip.onclick = ()=>{
+      document.querySelectorAll(".cat-chip").forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      document.getElementById("cat-"+i).scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    nav.appendChild(chip);
+
+    const block = document.createElement("div");
+    block.className = "cat-block";
+    block.id = "cat-"+i;
+    const title = document.createElement("div");
+    title.className = "cat-title";
+    const firstItem = MENU[cat][0];
+    title.textContent = (firstItem?.icon||"☕") + " " + cat;
+    block.appendChild(title);
+
+    MENU[cat].forEach(item=>{
+      const key = cat+"|"+item.id;
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="item-left">
+          <div class="item-icon">${item.icon||"☕"}</div>
+          <div>
+            <p class="item-name">${item.name}</p>
+            <p class="item-price">${fmt(item.price)}</p>
+          </div>
+        </div>
+        <div id="ctrl-${item.id}"></div>`;
+      block.appendChild(row);
+      renderCtrl(key, item.price, item.id);
+    });
+    list.appendChild(block);
+  });
+}
+
+function renderCtrl(key, price, id){
+  const el = document.getElementById("ctrl-"+id);
+  if(!el) return;
+  const qty = cart[key]||0;
+  if(qty===0){
+    el.innerHTML = `<button class="item-add" onclick="addItem('${key}',${price},${id})">+</button>`;
+  } else {
+    el.innerHTML = `<div class="item-qty-ctl">
+      <button onclick="changeQty('${key}',${price},${id},-1)">−</button>
+      <span>${qty}</span>
+      <button onclick="changeQty('${key}',${price},${id},1)">+</button>
+    </div>`;
+  }
+}
+
+function addItem(key,price,id){ cart[key]=(cart[key]||0)+1; renderCtrl(key,price,id); updateCartBar(); }
+function changeQty(key,price,id,d){
+  cart[key]=(cart[key]||0)+d;
+  if(cart[key]<=0) delete cart[key];
+  renderCtrl(key,price,id); updateCartBar();
+}
+
+function updateCartBar(){
+  let count=0, total=0;
+  Object.entries(cart).forEach(([k,q])=>{
+    const [cat,id]=k.split("|");
+    const item = MENU[cat]?.find(i=>i.id == id);
+    if(item){ count+=q; total+=item.price*q; }
+  });
+  const bar = document.getElementById("cartBar");
+  document.getElementById("cartCount").textContent=count;
+  document.getElementById("cartAmt").textContent=fmt(total);
+  bar.classList.toggle("show", count>0);
+}
+
+function buildCheckout(){
+  const list = document.getElementById("cartList");
+  list.innerHTML="";
+  let sub=0;
+  Object.entries(cart).forEach(([k,q])=>{
+    const [cat,id]=k.split("|");
+    const item=MENU[cat]?.find(i=>i.id == id);
+    if(!item) return;
+    const line=document.createElement("div");
+    line.className="cart-line";
+    line.innerHTML=`<span>${q}× ${item.name}</span><span class="amt">${fmt(item.price*q)}</span>`;
+    list.appendChild(line);
+    sub+=item.price*q;
+  });
+  document.getElementById("coSubtotal").textContent=fmt(sub);
+  document.getElementById("coTotal").textContent=fmt(sub+SERVICE_FEE);
+  document.getElementById("payAmt").textContent=fmt(sub+SERVICE_FEE);
+}
+
+/* ---- tabs ---- */
+document.querySelectorAll(".tabbar button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("view-"+btn.dataset.view).classList.add("active");
+    if(btn.dataset.view==="share") buildQR();
+  });
+});
+
+document.getElementById("cartBar").addEventListener("click",()=>{
+  buildCheckout();
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-checkout").classList.add("active");
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));
+});
+
+document.getElementById("backToMenu").addEventListener("click",()=>{
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-menu").classList.add("active");
+  document.querySelector(".tabbar button[data-view='menu']").classList.add("active");
+});
+
+/* ---- MoMo pay with backend integration ---- */
+document.getElementById("payBtn").addEventListener("click",async ()=>{
+  const phone = document.getElementById("momoPhone").value.replace(/\D/g,"");
+  const customerName = document.getElementById("customerName").value.trim();
+  if(!customerName){ alert("Enter your name"); return; }
+  if(phone.length<9){ alert("Enter a valid MoMo number"); return; }
+  
+  // Convert cart to the format the backend expects
+  const cartData = [];
+  Object.entries(cart).forEach(([k,q])=>{
+    const [cat,id]=k.split("|");
+    const item=MENU[cat]?.find(i=>i.id == id);
+    if(item){
+      cartData.push({ menu_item_id: item.id, quantity: q, name: item.name });
+    }
+  });
+
+  // Create an order first
+  const orderPayload = {
+    cart: cartData,
+    customer_name: customerName,
+    customer_email: "",
+    customer_phone: phone,
+    event_id: {{ event.id if event else 'null' }}
+  };
+  
+  const box = document.getElementById("statusBox");
+  const txt = document.getElementById("statusText");
+  const payBtn = document.getElementById("payBtn");
+  
+  box.className="status show";
+  txt.innerHTML="Creating your order…";
+  payBtn.disabled=true;
+  
+  try {
+    // Step 1: Create order
+    const orderRes = await fetch("{{ url_for('barista.create_order') }}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderPayload)
+    });
+    const orderData = await orderRes.json();
+    if(!orderData.success){
+      txt.innerHTML=`<strong>Error:</strong> ${orderData.error}`;
+      box.className="status show";
+      payBtn.disabled=false;
+      return;
+    }
+    currentOrderId = orderData.order_id;
+
+    // Step 2: Initiate payment
+    txt.innerHTML="Sending payment prompt to your phone…";
+    const paymentRes = await fetch(`${BARISTA_BASE}/api/order/${currentOrderId}/payment/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone_number: phone })
+    });
+    const paymentData = await paymentRes.json();
+    if(!paymentData.success){
+      txt.innerHTML=`<strong>Error:</strong> ${paymentData.error}`;
+      box.className="status show";
+      payBtn.disabled=false;
+      return;
+    }
+    
+    // Step 3: Poll payment status
+    const transactionId = paymentData.transaction_id;
+    const pollPayment = async () => {
+      const verifyRes = await fetch(`${BARISTA_BASE}/api/order/payment/verify/${transactionId}`);
+      const verifyData = await verifyRes.json();
+      
+      if(verifyData.success && verifyData.status === 'paid'){
+        box.className="status show success";
+        box.querySelector(".spinner")?.remove();
+        txt.textContent="Payment approved! Your Barista order is confirmed!";
+        cart = {};
+        updateCartBar();
+        // Optional: redirect to order confirmation page after a moment
+        setTimeout(()=>{
+          window.location.href = `${BARISTA_BASE}/order/${currentOrderId}`;
+        }, 2000);
+      } else if(verifyData.status === 'failed'){
+        txt.innerHTML=`<strong>Error:</strong> ${verifyData.error || 'Payment failed'}`;
+        box.className="status show";
+        payBtn.disabled=false;
+      } else {
+        // Still pending - check again in a few seconds
+        setTimeout(pollPayment, 3000);
+      }
+    };
+    pollPayment();
+    
+  } catch(e){
+    console.error("Payment error",e);
+    txt.innerHTML="<strong>Error:</strong> Something went wrong, please try again";
+    box.className="status show";
+    payBtn.disabled=false;
+  }
+});
+
+/* ---- QR ---- */
+let qrBuilt=false;
+function buildQR(){
+  if(qrBuilt) return;
+  qrBuilt=true;
+  const url = document.getElementById("qrUrlInput").value;
+  document.getElementById("qrUrlLabel").textContent=url.replace(/^https?:\/\//,"").toUpperCase();
+  new QRCode(document.getElementById("qrBox"),{text:url,width:160,height:160,correctLevel:QRCode.CorrectLevel.M});
+}
+document.getElementById("qrUpdateBtn").addEventListener("click",()=>{
+  document.getElementById("qrBox").innerHTML="";
+  qrBuilt=false;
+  buildQR();
+});
+
+// Initialize
+fetchMenu();
+</script>
+{% endblock %}

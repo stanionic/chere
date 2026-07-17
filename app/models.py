@@ -326,3 +326,79 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return f"<Transaction {self.id} - {self.status}>"
+
+
+class BaristaMenu(db.Model):
+    """Coffee menu items for the Barista experience."""
+    __tablename__ = "barista_menu_items"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # espresso, cappuccino, latte, tea, pastry
+    description = db.Column(db.String(255))
+    price = db.Column(db.Float, nullable=False, default=0.0)  # RWF
+    currency = db.Column(db.String(3), default="RWF")
+    icon = db.Column(db.String(20))  # emoji
+    is_available = db.Column(db.Boolean, default=True)
+    order = db.Column(db.Integer, default=0)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<BaristaMenu {self.name}>"
+
+
+class BaristaOrder(db.Model):
+    """Coffee order for the Barista experience."""
+    __tablename__ = "barista_orders"
+    id = db.Column(db.Integer, primary_key=True)
+    order_number = db.Column(db.String(50), unique=True, nullable=False)
+    customer_name = db.Column(db.String(140), nullable=False)
+    customer_email = db.Column(db.String(150))
+    customer_phone = db.Column(db.String(20))
+    status = db.Column(db.String(30), default="pending")  # pending, paid, preparing, ready, delivered
+    total_amount = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.String(3), default="RWF")
+    
+    # MoMo payment
+    transaction_id = db.Column(db.Integer, db.ForeignKey("transactions.id"))
+    transaction = db.relationship("Transaction", foreign_keys=[transaction_id])
+    
+    # If linked to an event
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"))
+    event = db.relationship("Event", foreign_keys=[event_id])
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    items = db.relationship(
+        "BaristaOrderItem",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+    
+    def __repr__(self):
+        return f"<BaristaOrder {self.order_number}>"
+
+
+class BaristaOrderItem(db.Model):
+    """Item in a Barista order."""
+    __tablename__ = "barista_order_items"
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey("barista_orders.id"), nullable=False)
+    menu_item_id = db.Column(db.Integer, db.ForeignKey("barista_menu_items.id"), nullable=False)
+    menu_item_name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    special_requests = db.Column(db.String(255))
+    
+    # Relationships
+    order = db.relationship("BaristaOrder", back_populates="items")
+    menu_item = db.relationship("BaristaMenu")
+    
+    def __repr__(self):
+        return f"<BaristaOrderItem {self.menu_item_name} x{self.quantity}>"

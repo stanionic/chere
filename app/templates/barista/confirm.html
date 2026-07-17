@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Commande {{ order.order_number }} - CHERE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        {% if order.status == "paid" %}
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            <h1 class="h2 mt-3 mb-2">Commande confirmee</h1>
+                            <p class="text-muted mb-0">Votre commande Barista a bien ete enregistree.</p>
+                        {% else %}
+                            <i class="bi bi-clock-history text-warning" style="font-size: 4rem;"></i>
+                            <h1 class="h2 mt-3 mb-2">Commande en attente</h1>
+                            <p class="text-muted mb-0">Votre commande existe, mais le paiement n'est pas encore confirme.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Numero de commande</small>
+                                    <strong>{{ order.order_number }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Statut</small>
+                                    <span class="badge {% if order.status == 'paid' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                        {{ order.status|upper }}
+                                    </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Client</small>
+                                    <strong>{{ order.customer_name }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Telephone</small>
+                                    <strong>{{ order.customer_phone or 'Non renseigne' }}</strong>
+                                </div>
+                                {% if order.event %}
+                                <div class="col-12">
+                                    <small class="text-muted d-block">Liee a l'evenement</small>
+                                    <strong>{{ order.event.title }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 class="h4 mb-3">Resume de la commande</h2>
+                    <div class="list-group mb-4">
+                        {% for item in order.items.order_by('id').all() %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ item.quantity }}x {{ item.menu_item_name }}</strong>
+                                    {% if item.special_requests %}
+                                        <div class="small text-muted">{{ item.special_requests }}</div>
+                                    {% endif %}
+                                </div>
+                                <span>{{ "%.0f"|format(item.price * item.quantity) }} RWF</span>
+                            </div>
+                        {% endfor %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Total</strong>
+                            <strong class="text-primary">{{ "%.0f"|format(order.total_amount) }} RWF</strong>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{{ url_for('events.barista_experience') }}" class="btn btn-primary">
+                            <i class="bi bi-cup-hot"></i>
+                            Retour au Barista
+                        </a>
+                        <a href="{{ url_for('events.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-calendar3"></i>
+                            Voir les evenements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

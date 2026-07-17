@@ -31,7 +31,7 @@
                             <img src="{{ event.cover_image }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
                         {% else %}
                             <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-calendar-alt fa-3x text-muted"></i>
+                                <i class="bi bi-calendar-event text-muted" style="font-size: 3rem;"></i>
                             </div>
                         {% endif %}
                         
@@ -50,9 +50,9 @@
                             </p>
                             
                             <div class="small text-muted mb-3">
-                                <div><i class="far fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y') if event.event_date }}</div>
-                                {% if event.location %}<div><i class="fas fa-map-marker-alt"></i> {{ event.location }}</div>{% endif %}
-                                <div><i class="fas fa-users"></i> {{ event.get_participant_count() }}{% if event.max_participants %}/{{ event.max_participants }}{% endif %}</div>
+                                <div><i class="bi bi-calendar3"></i> {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'TBA' }}</div>
+                                {% if event.location %}<div><i class="bi bi-geo-alt"></i> {{ event.location }}</div>{% endif %}
+                                <div><i class="bi bi-people"></i> {{ event.get_participant_count() }}{% if event.max_participants %}/{{ event.max_participants }}{% endif %}</div>
                             </div>
                             
                             {% if event.is_paid %}
@@ -63,9 +63,20 @@
                         </div>
                         
                         <div class="card-footer bg-white border-top-0">
-                            <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm w-100">
-                                Voir les détails
-                            </a>
+                            {% if event.event_type|lower == "barista" or event.slug == "barista-coffee-experience" %}
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm">
+                                        Voir les détails
+                                    </a>
+                                    <a href="{{ url_for('events.barista_experience') }}" class="btn btn-outline-primary btn-sm">
+                                        Commander un cafe
+                                    </a>
+                                </div>
+                            {% else %}
+                                <a href="{{ url_for('events.event_detail', slug=event.slug) }}" class="btn btn-primary btn-sm w-100">
+                                    Voir les détails
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

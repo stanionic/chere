@@ -31,6 +31,7 @@ def create_app(config_name="development"):
     from app.blueprints.admin import admin_bp
     from app.blueprints.api import api_bp
     from app.blueprints.events import events_bp
+    from app.blueprints.barista import barista_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(about_bp, url_prefix="/about")
@@ -45,6 +46,7 @@ def create_app(config_name="development"):
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(api_bp, url_prefix="/api/v1")
     app.register_blueprint(events_bp, url_prefix="/events")
+    app.register_blueprint(barista_bp, url_prefix="/events/barista")
 
     @app.errorhandler(404)
     def not_found(e):

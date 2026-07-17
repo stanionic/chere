@@ -79,6 +79,13 @@ def _is_event_full(event, reserved_count=None):
     return reserved_count >= event.max_participants
 
 
+@events_bp.route("/event/barista-coffee-experience")
+def barista_experience():
+    """Renders the full Barista app for the Barista Coffee Experience event."""
+    event = Event.query.filter_by(slug="barista-coffee-experience", is_published=True).first_or_404()
+    return render_template("events/barista_experience.html", event=event)
+
+
 @events_bp.route("/")
 def index():
     """Liste tous les événements publiés."""
