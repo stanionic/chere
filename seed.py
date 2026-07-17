@@ -4,7 +4,8 @@ from datetime import datetime
 from app import create_app, db
 from app.models import (
     User, Role, Sector, PillarIcon, Service, Project,
-    Partner, TeamMember, Article, Statistic, BaristaMenu, Event
+    Partner, TeamMember, Article, Statistic, BaristaMenu,
+    Event, Category, Product, ProductVariant, Merchant, Shop
 )
 
 config_name = os.getenv("FLASK_CONFIG", "development")

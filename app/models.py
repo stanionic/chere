@@ -1,12 +1,65 @@
 """
 Modèles de données CHERE.
 Couvre : utilisateurs/rôles, services, secteurs, projets, partenaires,
-blog, équipe, statistiques, messages de contact, newsletter, médias.
+blog, équipe, statistiques, messages de contact, newsletter, médias,
+événements, barista, et CHER Smart POS (caisse).
 """
+import enum
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.extensions import db
+
+
+# --- POS Enums
+class UserRole(enum.Enum):
+    ADMIN = "admin"
+    MERCHANT_OWNER = "merchant_owner"
+    CASHIER = "cashier"
+    CUSTOMER = "customer"
+    EVENT_ORGANIZER = "event_organizer"
+
+
+class OrderStatus(enum.Enum):
+    DRAFT = "brouillon"
+    PENDING = "en_attente"
+    PAYMENT_REQUESTED = "paiement_demande"
+    PAYMENT_RECEIVED = "paiement_recu"
+    PREPARING = "preparation"
+    SHIPPED = "expediee"
+    DELIVERED = "livree"
+    CANCELLED = "annulee"
+    REFUNDED = "remboursee"
+
+
+class PaymentMethod(enum.Enum):
+    MTN_MOMO = "mtn_momo"
+    AIRTEL_MONEY = "airtel_money"
+    CARD = "carte_bancaire"
+    QR_CODE = "qr_code"
+    NFC = "nfc"
+    PAYMENT_LINK = "lien_paiement"
+
+
+class TransactionStatus(enum.Enum):
+    INITIATED = "initiee"
+    PENDING = "en_attente"
+    SUCCESS = "reussie"
+    FAILED = "echouee"
+    REFUNDED = "remboursee"
+
+
+ALLOWED_TRANSITIONS = {
+    OrderStatus.DRAFT: {OrderStatus.PENDING, OrderStatus.CANCELLED},
+    OrderStatus.PENDING: {OrderStatus.PAYMENT_REQUESTED, OrderStatus.CANCELLED},
+    OrderStatus.PAYMENT_REQUESTED: {OrderStatus.PAYMENT_RECEIVED, OrderStatus.CANCELLED},
+    OrderStatus.PAYMENT_RECEIVED: {OrderStatus.PREPARING, OrderStatus.REFUNDED},
+    OrderStatus.PREPARING: {OrderStatus.SHIPPED, OrderStatus.REFUNDED},
+    OrderStatus.SHIPPED: {OrderStatus.DELIVERED, OrderStatus.REFUNDED},
+    OrderStatus.DELIVERED: {OrderStatus.REFUNDED},
+    OrderStatus.CANCELLED: set(),
+    OrderStatus.REFUNDED: set(),
+}
 
 
 class Role(db.Model):
@@ -402,3 +455,316 @@ class BaristaOrderItem(db.Model):
     
     def __repr__(self):
         return f"<BaristaOrderItem {self.menu_item_name} x{self.quantity}>"
+
+
+# --- CHER Smart POS Models
+class Merchant(db.Model):
+    __tablename__ = "merchants"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
+    business_name = db.Column(db.String(150), nullable=False)
+    business_registration_no = db.Column(db.String(80), nullable=True)
+    country = db.Column(db.String(80), default="Rwanda")
+    wallet_balance = db.Column(db.Numeric(14, 2), default=0)
+    qr_code_permanent = db.Column(db.String(255), unique=True, nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    owner = db.relationship("User", backref="merchant", uselist=False)
+    shops = db.relationship("Shop", back_populates="merchant", cascade="all, delete-orphan")
+    cashiers = db.relationship("MerchantCashier", back_populates="merchant", cascade="all, delete-orphan")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "business_name": self.business_name,
+            "country": self.country,
+            "wallet_balance": str(self.wallet_balance),
+            "qr_code_permanent": self.qr_code_permanent,
+            "is_verified": self.is_verified,
+        }
+    
+    def __repr__(self):
+        return f"<Merchant {self.business_name}>"
+
+
+class Shop(db.Model):
+    __tablename__ = "shops"
+    id = db.Column(db.Integer, primary_key=True)
+    merchant_id = db.Column(db.Integer, db.ForeignKey("merchants.id"), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=True)  # Link to Events!
+    name = db.Column(db.String(150), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    merchant = db.relationship("Merchant", back_populates="shops")
+    event = db.relationship("Event", backref="shops")
+    products = db.relationship("Product", back_populates="shop", cascade="all, delete-orphan")
+    pos_devices = db.relationship("POSDevice", back_populates="shop", cascade="all, delete-orphan")
+    orders = db.relationship("PosOrder", back_populates="shop", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Shop {self.name}>"
+
+
+class MerchantCashier(db.Model):
+    """Association entre un commerçant et ses caissiers (utilisateurs avec rôle CASHIER)."""
+    __tablename__ = "merchant_cashiers"
+    id = db.Column(db.Integer, primary_key=True)
+    merchant_id = db.Column(db.Integer, db.ForeignKey("merchants.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    assigned_shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    merchant = db.relationship("Merchant", back_populates="cashiers")
+    user = db.relationship("User", backref="cashier_assignments")
+    assigned_shop = db.relationship("Shop")
+    
+    def __repr__(self):
+        return f"<MerchantCashier {self.user.full_name} at {self.merchant.business_name}>"
+
+
+class Category(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer, primary_key=True)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
+    
+    products = db.relationship("Product", back_populates="category")
+    parent = db.relationship("Category", remote_side=[id])
+    
+    def __repr__(self):
+        return f"<Category {self.name}>"
+
+
+class Product(db.Model):
+    __tablename__ = "products"
+    id = db.Column(db.Integer, primary_key=True)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True)
+    name = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    barcode = db.Column(db.String(64), unique=True, nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
+    base_price = db.Column(db.Numeric(12, 2), nullable=False)
+    promo_price = db.Column(db.Numeric(12, 2), nullable=True)
+    promo_active = db.Column(db.Boolean, default=False)
+    stock_quantity = db.Column(db.Integer, default=0)
+    low_stock_threshold = db.Column(db.Integer, default=5)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    shop = db.relationship("Shop", back_populates="products")
+    category = db.relationship("Category", back_populates="products")
+    variants = db.relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
+    
+    @property
+    def is_low_stock(self) -> bool:
+        return self.stock_quantity <= self.low_stock_threshold
+    
+    @property
+    def effective_price(self):
+        return self.promo_price if (self.promo_active and self.promo_price is not None) else self.base_price
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "barcode": self.barcode,
+            "base_price": str(self.base_price),
+            "effective_price": str(self.effective_price),
+            "stock_quantity": self.stock_quantity,
+            "is_low_stock": self.is_low_stock,
+            "is_active": self.is_active,
+        }
+    
+    def __repr__(self):
+        return f"<Product {self.name}>"
+
+
+class ProductVariant(db.Model):
+    __tablename__ = "product_variants"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    price_delta = db.Column(db.Numeric(12, 2), default=0)
+    stock_quantity = db.Column(db.Integer, default=0)
+    
+    product = db.relationship("Product", back_populates="variants")
+    
+    def __repr__(self):
+        return f"<ProductVariant {self.name} for {self.product.name}>"
+
+
+class PosOrder(db.Model):
+    __tablename__ = "pos_orders"
+    id = db.Column(db.Integer, primary_key=True)
+    order_number = db.Column(db.String(30), unique=True, nullable=False)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    pos_device_id = db.Column(db.Integer, db.ForeignKey("pos_devices.id"), nullable=True)
+    status = db.Column(db.Enum(OrderStatus), default=OrderStatus.DRAFT, nullable=False)
+    subtotal = db.Column(db.Numeric(14, 2), default=0)
+    tax_amount = db.Column(db.Numeric(14, 2), default=0)
+    total_amount = db.Column(db.Numeric(14, 2), default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    shop = db.relationship("Shop", back_populates="orders")
+    customer = db.relationship("User")
+    pos_device = db.relationship("POSDevice")
+    items = db.relationship("PosOrderItem", back_populates="order", cascade="all, delete-orphan")
+    transactions = db.relationship("PosTransaction", back_populates="order")
+    
+    def can_transition_to(self, new_status: OrderStatus) -> bool:
+        return new_status in ALLOWED_TRANSITIONS.get(self.status, set())
+    
+    def transition_to(self, new_status: OrderStatus):
+        if not self.can_transition_to(new_status):
+            raise ValueError(
+                f"Transition invalide: {self.status.value} -> {new_status.value}"
+            )
+        self.status = new_status
+        self.updated_at = datetime.utcnow()
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "order_number": self.order_number,
+            "status": self.status.value,
+            "subtotal": str(self.subtotal),
+            "tax_amount": str(self.tax_amount),
+            "total_amount": str(self.total_amount),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "items": [item.to_dict() for item in self.items],
+        }
+    
+    def __repr__(self):
+        return f"<PosOrder {self.order_number}>"
+
+
+class PosOrderItem(db.Model):
+    __tablename__ = "pos_order_items"
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey("pos_orders.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
+    variant_id = db.Column(db.Integer, db.ForeignKey("product_variants.id"), nullable=True)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    unit_price = db.Column(db.Numeric(12, 2), nullable=False)
+    line_total = db.Column(db.Numeric(14, 2), nullable=False)
+    
+    order = db.relationship("PosOrder", back_populates="items")
+    product = db.relationship("Product")
+    variant = db.relationship("ProductVariant")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "quantity": self.quantity,
+            "unit_price": str(self.unit_price),
+            "line_total": str(self.line_total),
+        }
+    
+    def __repr__(self):
+        return f"<PosOrderItem {self.product.name} x{self.quantity}>"
+
+
+class POSDevice(db.Model):
+    __tablename__ = "pos_devices"
+    id = db.Column(db.Integer, primary_key=True)
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"), nullable=False)
+    device_serial = db.Column(db.String(80), unique=True, nullable=False)
+    device_model = db.Column(db.String(50), nullable=False)
+    device_name = db.Column(db.String(100), nullable=True)
+    is_online = db.Column(db.Boolean, default=False)
+    last_sync_at = db.Column(db.DateTime, nullable=True)
+    app_version = db.Column(db.String(20), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    shop = db.relationship("Shop", back_populates="pos_devices")
+    orders = db.relationship("PosOrder", backref="pos_device")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "device_serial": self.device_serial,
+            "device_model": self.device_model,
+            "is_online": self.is_online,
+            "last_sync_at": self.last_sync_at.isoformat() if self.last_sync_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<POSDevice {self.device_serial}>"
+
+
+class PosTransaction(db.Model):
+    __tablename__ = "pos_transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    reference = db.Column(db.String(40), unique=True, nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey("pos_orders.id"), nullable=False)
+    merchant_id = db.Column(db.Integer, db.ForeignKey("merchants.id"), nullable=False)
+    method = db.Column(db.Enum(PaymentMethod), nullable=False)
+    status = db.Column(db.Enum(TransactionStatus), default=TransactionStatus.INITIATED)
+    amount = db.Column(db.Numeric(14, 2), nullable=False)
+    currency = db.Column(db.String(10), default="RWF")
+    provider_transaction_id = db.Column(db.String(120), nullable=True)
+    provider_raw_response = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    order = db.relationship("PosOrder", back_populates="transactions")
+    merchant = db.relationship("Merchant")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "reference": self.reference,
+            "order_id": self.order_id,
+            "method": self.method.value,
+            "status": self.status.value,
+            "amount": str(self.amount),
+            "currency": self.currency,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<PosTransaction {self.reference}>"
+
+
+class AuditLog(db.Model):
+    """Journal d'audit: trace toute action sensible pour la sécurité et la conformité."""
+    __tablename__ = "audit_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    action = db.Column(db.String(100), nullable=False)
+    entity_type = db.Column(db.String(50), nullable=True)
+    entity_id = db.Column(db.String(36), nullable=True)  # To support both integer and string IDs
+    ip_address = db.Column(db.String(45), nullable=True)
+    details = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship("User")
+    
+    @staticmethod
+    def record(user_id, action, entity_type=None, entity_id=None, ip_address=None, details=None):
+        log = AuditLog(
+            user_id=user_id,
+            action=action,
+            entity_type=entity_type,
+            entity_id=str(entity_id) if entity_id else None,
+            ip_address=ip_address,
+            details=details,
+        )
+        db.session.add(log)
+        return log
+    
+    def __repr__(self):
+        return f"<AuditLog {self.action} at {self.created_at}>"
