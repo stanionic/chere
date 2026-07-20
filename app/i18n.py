@@ -84,6 +84,7 @@ TRANSLATIONS = {
         "navbar.contact": "Contact",
         "navbar.notifications": "Notifications",
         "navbar.toggle_theme": "Basculer le theme",
+        "navbar.eval": "Évaluations",
         "navbar.explore": "Explore CHERE",
         "footer.company_copy": (
             "Community • Humanity • Empowerment • Resources • Environment."
@@ -459,6 +460,7 @@ TRANSLATIONS = {
         "navbar.contact": "Contact",
         "navbar.notifications": "Notifications",
         "navbar.toggle_theme": "Toggle theme",
+        "navbar.eval": "Evaluations",
         "navbar.explore": "Explore CHERE",
         "footer.company_copy": (
             "Community • Humanity • Empowerment • Resources • Environment."
