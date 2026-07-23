@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHERE — Hors ligne</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0b0f19 0%, #111a2e 50%, #0d2f6e 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .offline-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 1.75rem;
+      padding: 3rem 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    }
+    .offline-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(212,160,23,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2.5rem;
+    }
+    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; }
+    p { color: #a7b0c0; line-height: 1.6; margin-bottom: 2rem; font-size: 0.95rem; }
+    .btn-retry {
+      display: inline-block;
+      background: linear-gradient(135deg, #1446a0, #0d2f6e);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    .btn-retry:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(20,70,160,0.3); }
+    .chere-logo { font-weight: 800; font-size: 1.3rem; color: #d4a017; margin-bottom: 0.25rem; }
+    @media (max-width: 480px) {
+      .offline-card { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="offline-icon">📡</div>
+    <div class="chere-logo">CHERE</div>
+    <h1>Connexion perdue</h1>
+    <p>Vous êtes actuellement hors ligne. Les fonctionnalités limitées sont disponibles.<br>Reconnectez-vous pour profiter de toutes les fonctionnalités CHERE.</p>
+    <a href="/" class="btn-retry" onclick="window.location.reload()">Réessayer</a>
+  </div>
+</body>
+</html>

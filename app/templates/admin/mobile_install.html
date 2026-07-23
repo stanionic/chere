@@ -1,0 +1,159 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<h4 class="mb-4">
+  <i class="bi bi-phone me-2" style="color:var(--royal-blue)"></i>
+  Installation Mobile — PWA
+</h4>
+
+<!-- Cartes de statistiques -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="fw-bold fs-4" style="color:var(--royal-blue)">{{ stats.total_propositions }}</div>
+      <div class="small text-muted-soft">Propositions</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="fw-bold fs-4" style="color:var(--emerald)">{{ stats.total_installed }}</div>
+      <div class="small text-muted-soft">Installations</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="fw-bold fs-4" style="color:var(--gold)">{{ stats.total_dismissed }}</div>
+      <div class="small text-muted-soft">Refus</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="fw-bold fs-4" style="color:var(--royal-blue)">{{ stats.conversion_rate }}%</div>
+      <div class="small text-muted-soft">Taux de conversion</div>
+    </div>
+  </div>
+</div>
+
+<!-- Répartition par appareil -->
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-glass p-4">
+      <h6 class="mb-3">Répartition par appareil</h6>
+      <div class="d-flex gap-4 flex-wrap">
+        <div class="text-center">
+          <i class="bi bi-phone fs-3 d-block mb-1" style="color:#34a853"></i>
+          <span class="fw-bold">{{ stats.by_device.android }}</span>
+          <div class="small text-muted-soft">Android</div>
+        </div>
+        <div class="text-center">
+          <i class="bi bi-phone fs-3 d-block mb-1" style="color:#5b5b5b"></i>
+          <span class="fw-bold">{{ stats.by_device.ios }}</span>
+          <div class="small text-muted-soft">iOS</div>
+        </div>
+        <div class="text-center">
+          <i class="bi bi-laptop fs-3 d-block mb-1" style="color:#1446a0"></i>
+          <span class="fw-bold">{{ stats.by_device.desktop }}</span>
+          <div class="small text-muted-soft">Desktop</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Formulaire de configuration -->
+<div class="card-glass p-4 mb-4">
+  <h6 class="mb-3">Configuration du popup d'installation</h6>
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3 form-check form-switch">
+      {{ form.enabled(class="form-check-input", id="enabled") }}
+      <label class="form-check-label" for="enabled">{{ form.enabled.label.text }}</label>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        {{ form.popup_delay.label(class="form-label") }}
+        {{ form.popup_delay(class="form-select") }}
+        {% if form.popup_delay.errors %}
+          <div class="text-danger small">{{ form.popup_delay.errors[0] }}</div>
+        {% endif %}
+      </div>
+      <div class="col-md-6">
+        {{ form.dismiss_duration_days.label(class="form-label") }}
+        {{ form.dismiss_duration_days(class="form-control", type="number", min=1, max=90) }}
+        <div class="form-text small text-muted-soft">Nombre de jours avant de réafficher le popup après un refus.</div>
+        {% if form.dismiss_duration_days.errors %}
+          <div class="text-danger small">{{ form.dismiss_duration_days.errors[0] }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form.custom_title.label(class="form-label") }}
+      {{ form.custom_title(class="form-control", placeholder="Laissez vide pour utiliser le texte par défaut") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.custom_description.label(class="form-label") }}
+      {{ form.custom_description(class="form-control", rows=2, placeholder="Laissez vide pour utiliser le texte par défaut") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.custom_button.label(class="form-label") }}
+      {{ form.custom_button(class="form-control", placeholder="Laissez vide pour utiliser le texte par défaut") }}
+    </div>
+
+    <button type="submit" class="btn btn-chere">{{ form.submit.label.text }}</button>
+  </form>
+</div>
+
+<!-- Derniers événements -->
+<div class="card-glass p-4">
+  <h6 class="mb-3">Derniers événements d'installation</h6>
+  {% if recent_events %}
+    <div class="table-responsive">
+      <table class="table table-sm table-borderless mb-0">
+        <thead>
+          <tr>
+            <th class="text-muted-soft small">Date</th>
+            <th class="text-muted-soft small">Appareil</th>
+            <th class="text-muted-soft small">Action</th>
+            <th class="text-muted-soft small">Navigateur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in recent_events %}
+          <tr>
+            <td class="small">{{ event.created_at.strftime('%d/%m/%Y %H:%M') if event.created_at else '—' }}</td>
+            <td class="small">
+              {% if event.device_type == 'android' %}
+                <i class="bi bi-phone me-1" style="color:#34a853"></i>
+              {% elif event.device_type == 'ios' %}
+                <i class="bi bi-phone me-1" style="color:#5b5b5b"></i>
+              {% else %}
+                <i class="bi bi-laptop me-1"></i>
+              {% endif %}
+              {{ event.device_type or '—' }}
+            </td>
+            <td class="small">
+              {% if event.action == 'installed' or event.install_completed %}
+                <span class="badge bg-success">Installé</span>
+              {% elif event.dismissed %}
+                <span class="badge bg-warning text-dark">Refusé</span>
+              {% elif event.install_requested %}
+                <span class="badge bg-info text-dark">Proposé</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ event.action }}</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ event.browser or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted-soft small mb-0">Aucun événement d'installation enregistré pour le moment.</p>
+  {% endif %}
+</div>
+{% endblock %}

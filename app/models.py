@@ -739,6 +739,43 @@ class PosTransaction(db.Model):
         return f"<PosTransaction {self.reference}>"
 
 
+class AppInstallation(db.Model):
+    """Enregistrement des événements d'installation PWA pour le suivi et les statistiques."""
+    __tablename__ = "app_installations"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+    device_type = db.Column(db.String(50), nullable=True)  # android, ios, desktop
+    browser = db.Column(db.String(50), nullable=True)
+    os = db.Column(db.String(50), nullable=True)
+    language = db.Column(db.String(10), nullable=True)
+    action = db.Column(db.String(30), nullable=False)  # requested, completed, dismissed, installed
+    install_requested = db.Column(db.Boolean, default=False)
+    install_completed = db.Column(db.Boolean, default=False)
+    dismissed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship("User", backref="installations")
+
+    def __repr__(self):
+        return f"<AppInstallation {self.action} {self.device_type} at {self.created_at}>"
+
+
+class PwaConfig(db.Model):
+    """Configuration du module PWA / Installation mobile, modifiable depuis l'admin."""
+    __tablename__ = "pwa_config"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, default=True)
+    popup_delay = db.Column(db.Integer, default=5)  # secondes avant affichage
+    dismiss_duration_days = db.Column(db.Integer, default=1)  # jours avant réaffichage
+    custom_title = db.Column(db.String(200), nullable=True)
+    custom_description = db.Column(db.String(300), nullable=True)
+    custom_button = db.Column(db.String(100), nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PwaConfig enabled={self.enabled}>"
+
+
 class AuditLog(db.Model):
     """Journal d'audit: trace toute action sensible pour la sécurité et la conformité."""
     __tablename__ = "audit_logs"

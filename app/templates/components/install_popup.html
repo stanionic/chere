@@ -1,0 +1,75 @@
+<!-- =========================================================
+     CHERE — PWA Install Popup Template
+     Design glassmorphism premium avec variantes Android/iOS
+     ========================================================= -->
+<div id="chere-pwa-overlay" class="chere-pwa-overlay" aria-hidden="true">
+  <div class="chere-pwa-popup" role="dialog" aria-modal="true" aria-label="Installation CHERE">
+
+    <!-- Bouton fermer -->
+    <button class="chere-pwa-close-btn" aria-label="Fermer" type="button">&times;</button>
+
+    <!-- Logo CHERE -->
+    <div class="chere-pwa-logo">
+      <img src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="CHERE" width="40" height="40" loading="lazy">
+    </div>
+
+    <!-- Badge gratuit -->
+    <div class="text-center">
+      <span class="chere-pwa-badge">{{ t('home.popup_free') }}</span>
+    </div>
+
+    <!-- Titre principal -->
+    <h2 class="chere-pwa-title">{{ t('pwa.install_title') }}</h2>
+
+    <!-- Sous-titre -->
+    <p class="chere-pwa-subtitle">{{ t('pwa.install_subtitle') }}</p>
+
+    <!-- Bouton d'installation (Android / Desktop) -->
+    <button class="chere-pwa-install-btn" type="button">
+      {{ t('pwa.install_button') }}
+    </button>
+
+    <!-- Guide iOS (caché par défaut, activé via JavaScript) -->
+    <div class="chere-pwa-ios-guide" id="chere-pwa-ios-guide">
+      <div class="chere-pwa-ios-step">
+        <div class="chere-pwa-ios-step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1446a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="1" width="18" height="22" rx="3" ry="3"/>
+            <line x1="12" y1="17" x2="12" y2="19"/>
+          </svg>
+        </div>
+        <div class="chere-pwa-ios-step-text">
+          {{ t('pwa.ios_step_1') }} <strong>{{ t('pwa.ios_share') }}</strong>
+        </div>
+      </div>
+      <div class="chere-pwa-ios-step">
+        <div class="chere-pwa-ios-step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4a017" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 21h16"/>
+            <polyline points="4 21 4 3 20 3 20 21"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div class="chere-pwa-ios-step-text">
+          {{ t('pwa.ios_step_2') }}<br><strong>{{ t('pwa.ios_add_to_home') }}</strong>
+        </div>
+      </div>
+      <div class="chere-pwa-ios-step">
+        <div class="chere-pwa-ios-step-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0e9f6e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="chere-pwa-ios-step-text">
+          {{ t('pwa.ios_step_3') }}<br><strong>{{ t('pwa.ios_add') }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lien "Plus tard" -->
+    <button class="chere-pwa-later-btn" type="button">
+      {{ t('pwa.later_button') }}
+    </button>
+
+  </div>
+</div>

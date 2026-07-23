@@ -45,6 +45,7 @@ def create_app(config_name="development"):
     from app.blueprints.barista import barista_bp
     from app.blueprints.pos import pos_bp
     from app.blueprints.eval import eval_bp
+    from app.blueprints.pwa import pwa_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(about_bp, url_prefix="/about")
@@ -62,6 +63,9 @@ def create_app(config_name="development"):
     app.register_blueprint(barista_bp, url_prefix="/events/barista")
     app.register_blueprint(pos_bp, url_prefix="/events/pos")
     app.register_blueprint(eval_bp, url_prefix="/eval")
+    app.register_blueprint(pwa_bp)
+
+
 
     @app.before_request
     def set_request_locale():
