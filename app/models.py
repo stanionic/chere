@@ -832,9 +832,9 @@ class PwaConfig(db.Model):
     """Configuration du module PWA / Installation mobile, modifiable depuis l'admin."""
     __tablename__ = "pwa_config"
     id = db.Column(db.Integer, primary_key=True)
-    enabled = db.Column(db.Boolean, default=True)
-    popup_delay = db.Column(db.Integer, default=5)  # secondes avant affichage
-    dismiss_duration_days = db.Column(db.Integer, default=1)  # jours avant réaffichage
+    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default="1")
+    popup_delay = db.Column(db.Integer, nullable=False, default=5, server_default="5")
+    dismiss_duration_days = db.Column(db.Integer, nullable=False, default=1, server_default="1")
     custom_title = db.Column(db.String(200), nullable=True)
     custom_description = db.Column(db.String(300), nullable=True)
     custom_button = db.Column(db.String(100), nullable=True)

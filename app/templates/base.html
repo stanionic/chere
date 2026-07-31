@@ -6,7 +6,7 @@
   <title>{% block title %}{{ site_name }} — {{ site_tagline }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ t('base.meta_description') }}{% endblock %}">
   <meta name="theme-color" content="#1446a0">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="manifest" href="{{ url_for('pwa.manifest_json') }}">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -68,10 +68,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- CHERE JS -->
   <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
-  <!-- PWA Install JS -->
+  <!-- PWA Install JS (popup glass + registre SW + guide iOS) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='pwa/install.css') }}">
   <script src="{{ url_for('static', filename='pwa/install.js') }}" defer></script>
-  <script src="{{ url_for('static', filename='js/install.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

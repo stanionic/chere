@@ -65,6 +65,10 @@ def create_app(config_name="development"):
     app.register_blueprint(eval_bp, url_prefix="/eval")
     app.register_blueprint(pwa_bp)
 
+    # CSRF exemption : endpoint install-event appelé depuis service worker / beacon
+    # (pas d'accès au cookie csrf_token). Les champs sont anonymisés.
+    csrf.exempt("app.blueprints.pwa.routes.record_install_event")
+
 
 
     @app.before_request

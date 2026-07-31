@@ -1,181 +1,134 @@
-const CACHE_NAME = 'chere-v2';
-const STATIC_CACHE = 'chere-static-v2';
-const PAGE_CACHE = 'chere-pages-v2';
-const OFFLINE_URL = '/templates/pwa/offline.html';
+/* =========================================================
+   CHERE — Service Worker v3 (PWA install-friendly)
+   Cache stratégique : static Cache-First, pages Network-First,
+   offline fallback page accessible à la racine.
+   ========================================================= */
 
+const VERSION = 'v3';
+const STATIC_CACHE = `chere-static-${VERSION}`;
+const PAGE_CACHE   = `chere-pages-${VERSION}`;
+
+const OFFLINE_URL = '/pwa/offline.html';
+
+// Assets connus statiques servis par /static/ — précachés à l'install
 const PRECACHE_ASSETS = [
+  OFFLINE_URL,
   '/',
   '/static/css/style.css',
   '/static/js/main.js',
   '/static/pwa/install.js',
   '/static/pwa/install.css',
-  '/static/img/logo-nav.png',
-  '/static/img/logo.png',
   '/static/img/logo-mark.png',
+  '/static/img/favicon.ico',
   '/static/img/favicon-16.png',
   '/static/img/favicon-180.png',
   '/static/img/favicon-192.png',
   '/static/img/favicon-512.png',
-  '/static/img/favicon.ico',
   '/static/manifest.json'
-];
-
-const RUNTIME_PAGES = [
-  '/',
-  '/about',
-  '/events',
-  '/contact',
-  '/innovation',
-  '/renewable-energy',
-  '/humanitarian',
-  '/projects',
-  '/partners',
-  '/blog',
-  '/services',
-  '/eval'
 ];
 
 // === INSTALL ===
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => {
-      return cache.addAll(PRECACHE_ASSETS);
-    }).then(() => {
-      return self.skipWaiting();
-    })
+    caches.open(STATIC_CACHE).then(cache => cache.addAll(PRECACHE_ASSETS)).catch(() => {})
   );
 });
 
 // === ACTIVATE ===
 self.addEventListener('activate', event => {
-  const validCaches = [STATIC_CACHE, PAGE_CACHE];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(name => {
-          if (!validCaches.includes(name) && name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
-        })
-      );
-    }).then(() => {
-      return self.clients.claim();
-    })
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(k => k !== STATIC_CACHE && k !== PAGE_CACHE)
+          .map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// === FETCH STRATEGIES ===
-self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET and external requests
-  if (request.method !== 'GET') return;
-  if (url.origin !== self.location.origin) {
-    // External resources: CDN, fonts, etc. — Network First
-    event.respondWith(networkFirstWithFallback(request));
-    return;
-  }
-
-  const pathname = url.pathname;
-
-  // Static assets (CSS, JS, images) — Cache First
-  if (pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff2?)$/)) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  // PWA manifest — Cache First
-  if (pathname === '/manifest.json' || pathname.startsWith('/static/')) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  // API calls — Network First
-  if (pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstWithTimeout(request, 3000));
-    return;
-  }
-
-  // Navigation / pages — Network First with offline fallback
-  if (RUNTIME_PAGES.includes(pathname) || request.mode === 'navigate') {
-    event.respondWith(networkFirstWithOffline(request));
-    return;
-  }
-
-  // Default: Network First
-  event.respondWith(networkFirstWithFallback(request));
-});
-
-// === CACHE STRATEGIES ===
-
+// === HELPERS ===
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(STATIC_CACHE);
-      cache.put(request, response.clone());
+    const resp = await fetch(request);
+    if (resp && resp.ok && request.method === 'GET') {
+      const copy = resp.clone();
+      caches.open(STATIC_CACHE).then(c => c.put(request, copy)).catch(() => {});
     }
-    return response;
-  } catch (error) {
-    return new Response('Offline', { status: 408 });
+    return resp;
+  } catch (e) {
+    return new Response('Offline', { status: 408, statusText: 'Request Timeout' });
   }
 }
 
-async function networkFirstWithOffline(request) {
+async function networkFirst(request, { timeoutMs = 6000, offlinePage = false } = {}) {
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(PAGE_CACHE);
-      cache.put(request, response.clone());
+    const resp = await Promise.race([fetch(request), timeout]);
+    if (resp && resp.ok && request.method === 'GET') {
+      const copy = resp.clone();
+      caches.open(PAGE_CACHE).then(c => c.put(request, copy)).catch(() => {});
     }
-    return response;
-  } catch (error) {
+    return resp;
+  } catch (e) {
     const cached = await caches.match(request);
     if (cached) return cached;
-    // Return offline page
-    const offlineResponse = await caches.match(OFFLINE_URL);
-    if (offlineResponse) return offlineResponse;
-    return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } });
+    if (offlinePage) {
+      const fallback = await caches.match(OFFLINE_URL);
+      if (fallback) return fallback;
+    }
+    if (request.headers && request.headers.get('accept') && request.headers.get('accept').includes('text/html')) {
+      return new Response(
+        '<html><body style="font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;color:#1446a0;"><div><h1>CHERE</h1><p>Vous etes hors ligne. Reconnectez-vous pour continuer.</p></div></body></html>',
+        { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      );
+    }
+    return new Response(
+      JSON.stringify({ error: 'offline' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
 
-async function networkFirstWithTimeout(request, timeout = 5000) {
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout')), timeout)
-  );
-  try {
-    const response = await Promise.race([
-      fetch(request),
-      timeoutPromise
-    ]);
-    if (response.ok) {
-      const cache = await caches.open(PAGE_CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return new Response(JSON.stringify({ error: 'offline' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
+// === FETCH ===
+self.addEventListener('fetch', event => {
+  const req = event.request;
 
-async function networkFirstWithFallback(request) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(STATIC_CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (error) {
-    const cached = await caches.match(request);
-    return cached || new Response('Offline', { status: 503 });
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) {
+    // CDN / tierces parties : on ne les met pas en cache
+    return;
   }
-}
+
+  const path = url.pathname;
+
+  // Manifest + favicons + static (CSS, JS, images, fonts) : Cache First
+  if (
+    path === '/manifest.json' ||
+    path.startsWith('/static/') ||
+    /\.(?:css|js|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$/i.test(path)
+  ) {
+    event.respondWith(cacheFirst(req));
+    return;
+  }
+
+  // API : Network First avec timeout, fallback JSON offline
+  if (path.startsWith('/api/')) {
+    event.respondWith(networkFirst(req, { timeoutMs: 5000 }));
+    return;
+  }
+
+  // Pages / navigate : Network First avec fallback offline page
+  if (req.mode === 'navigate' || /text\/html/.test(req.headers.get('accept') || '')) {
+    event.respondWith(networkFirst(req, { timeoutMs: 8000, offlinePage: true }));
+    return;
+  }
+
+  // Defaut : Network First
+  event.respondWith(networkFirst(req));
+});

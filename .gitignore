@@ -7,3 +7,16 @@ __pycache__/
 instance/
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+
+# Scripts / logs temporaires
+_*.py
+_*.txt
+
+# Données hors modules Flask
+barista/images/
+migrations/admin/
+
+# Dossiers build & tiers
+plateforme-eval/dist/
+admin-panel/node_modules/
+node_modules/

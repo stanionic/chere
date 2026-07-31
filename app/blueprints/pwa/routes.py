@@ -1,12 +1,43 @@
 """
-Routes du module PWA (manifest dynamique, événements d'installation, stats).
+Routes du module PWA (manifest dynamique, page offline,
+événements d'installation, stats, config).
 """
 import json
+import os
 from datetime import datetime
-from flask import jsonify, request, current_app
+from flask import (
+    jsonify, request, current_app, render_template, url_for, Response,
+    send_from_directory, abort,
+)
 from app.blueprints.pwa import pwa_bp
 from app.models import AppInstallation, PwaConfig
-from app.extensions import db
+from app.extensions import db, csrf
+
+
+@pwa_bp.route("/pwa/offline.html")
+def offline_page():
+    """
+    Affiche la page « Hors ligne » servie par le Service Worker quand
+    l'utilisateur n'a pas de réseau (fallback HTML).
+    """
+    return render_template("pwa/offline.html")
+
+
+@pwa_bp.route("/manifest.json")
+def manifest_json():
+    """
+    Sert le manifest PWA depuis `app/static/manifest.json`.
+    Permet d'ajouter des dynamiques (ex: traduction du nom).
+    """
+    manifest_path = os.path.join(current_app.static_folder, "manifest.json")
+    if not os.path.exists(manifest_path):
+        abort(404)
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    resp = jsonify(payload)
+    resp.headers["Content-Type"] = "application/manifest+json"
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
 
 
 @pwa_bp.route("/api/v1/pwa/install-event", methods=["POST"])
