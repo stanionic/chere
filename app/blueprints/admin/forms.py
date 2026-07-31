@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField
-from wtforms.validators import DataRequired, Email, Optional, NumberRange
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField, SelectMultipleField
+from wtforms.validators import DataRequired, Email, Optional, NumberRange, Length
 
 
 class LoginForm(FlaskForm):
@@ -47,3 +47,55 @@ class MobileInstallSettingsForm(FlaskForm):
         validators=[Optional()],
     )
     submit = SubmitField("Enregistrer la configuration")
+
+
+class EventSmsBroadcastForm(FlaskForm):
+    """Formulaire pour créer une diffusion SMS/WhatsApp."""
+    title = StringField(
+        "Titre de la campagne",
+        validators=[DataRequired(), Length(max=200)],
+        render_kw={"placeholder": "Ex: Invitation Barista Experience Mars"},
+    )
+    message = TextAreaField(
+        "Message",
+        validators=[DataRequired(), Length(max=1600)],
+        render_kw={
+            "placeholder": (
+                "Bonjour {name}, CHERE vous invite à notre prochain événement !\n"
+                "📅 Date: ...\n"
+                "📍 Lieu: ...\n"
+                "👉 Inscrivez-vous ici: https://..."
+            ),
+            "rows": 7,
+        },
+    )
+    channel = SelectField(
+        "Canal d'envoi",
+        choices=[
+            ("whatsapp", "WhatsApp (liens wa.me)"),
+            ("sms", "SMS"),
+            ("both", "SMS + WhatsApp"),
+        ],
+        default="whatsapp",
+        validators=[DataRequired()],
+    )
+    target_scope = SelectField(
+        "Cible",
+        choices=[
+            ("optin_all", "Tous les contacts consentants (opt-in)"),
+            ("optin_confirmed", "Tous les inscriptions confirmées + opt-in"),
+            ("specific_event", "Participants d'un événement précis"),
+            ("all_participants", "Tous les participants sans filtre"),
+        ],
+        default="optin_all",
+        validators=[DataRequired()],
+    )
+    event_id = SelectField(
+        "Événement cible (si Cible = spécifique)",
+        choices=[("", "— Sélectionnez un événement —")],
+        coerce=int,
+        default="",
+        validators=[Optional()],
+    )
+    submit_preview = SubmitField("Prévisualiser & Sélectionner")
+    submit_send = SubmitField("🚀 Envoyer immédiatement")

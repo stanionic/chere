@@ -1,0 +1,196 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="card-glass p-4 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h4 class="mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Participants aux événements</h4>
+      <p class="text-muted mb-0">Liste complète des inscrits avec filtres et gestion des consentements pour les invitations futures.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('events.events_qrcode', size=512) }}" target="_blank" class="btn btn-outline-secondary" title="Ouvrir le QR Code publique des événements">
+        <i class="bi bi-qr-code-scan me-1"></i>QR Code partage
+      </a>
+      <a href="{{ url_for('admin.event_contacts_export', format='csv', optin=1) }}" class="btn btn-outline-success">
+        <i class="bi bi-filetype-csv me-1"></i>Exporter CSV (opt-in)
+      </a>
+      <a href="{{ url_for('admin.sms_broadcast') }}" class="btn btn-primary">
+        <i class="bi bi-send me-1"></i>Envoyer une invitation
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 bg-primary bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold text-primary">{{ stats.total }}</div>
+          <small class="text-muted">Total inscrits</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 bg-success bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold text-success">{{ stats.confirmed }}</div>
+          <small class="text-muted">Confirmés</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 bg-warning bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold text-warning">{{ stats.with_whatsapp }}</div>
+          <small class="text-muted">Avec WhatsApp</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100 bg-info bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold text-info">{{ stats.optin }}</div>
+          <small class="text-muted">Opt-in invitations</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="get" class="card bg-light border-0 p-3 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Événement</label>
+        <select name="event_id" class="form-select">
+          <option value="">Tous les événements</option>
+          {% for e in events %}
+          <option value="{{ e.id }}" {% if current_event_id == e.id %}selected{% endif %}>{{ e.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-semibold">Statut</label>
+        <select name="status" class="form-select">
+          <option value="">Tous</option>
+          <option value="confirmed" {% if current_status == 'confirmed' %}selected{% endif %}>Confirmé</option>
+          <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>En attente</option>
+          <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>Annulé</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-semibold">Opt-in invitations</label>
+        <select name="optin" class="form-select">
+          <option value="0" {% if not optin_only %}selected{% endif %}>Tous</option>
+          <option value="1" {% if optin_only %}selected{% endif %}>Uniquement opt-in</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Recherche</label>
+        <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Nom, email, téléphone...">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel"></i> Filtrer</button>
+        <a href="{{ url_for('admin.event_participants') }}" class="btn btn-outline-secondary" title="Réinitialiser">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>WhatsApp</th>
+          <th>Événement</th>
+          <th>Statut</th>
+          <th>Opt-in</th>
+          <th>Inscrit le</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in participants %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-semibold">
+                {{ (p.full_name or '?')[:1]|upper }}
+              </div>
+              <span class="fw-medium">{{ p.full_name }}</span>
+            </div>
+          </td>
+          <td><small>{{ p.email }}</small></td>
+          <td><code class="small">{{ format_phone_display(p.phone) }}</code></td>
+          <td>
+            {% if p.whatsapp %}
+            <a href="https://wa.me/{{ p.whatsapp_normalized() }}" target="_blank" class="text-success text-decoration-none">
+              <i class="bi bi-whatsapp"></i> {{ format_phone_display(p.whatsapp) }}
+            </a>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <small>{{ p.event.title if p.event else '—' }}</small>
+          </td>
+          <td>
+            {% if p.status == 'confirmed' %}
+            <span class="badge bg-success">Confirmé</span>
+            {% elif p.status == 'pending' %}
+            <span class="badge bg-warning text-dark">En attente</span>
+            {% elif p.status == 'cancelled' %}
+            <span class="badge bg-secondary">Annulé</span>
+            {% else %}
+            <span class="badge bg-light text-dark">{{ p.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.allow_future_invites %}
+            <span class="badge bg-info text-dark" title="Consentement donné pour les invitations futures"><i class="bi bi-check-circle"></i> Opt-in</span>
+            {% else %}
+            <span class="badge bg-light text-muted"><i class="bi bi-x-circle"></i> Non</span>
+            {% endif %}
+          </td>
+          <td><small class="text-muted">{{ p.registration_date.strftime('%d/%m/%Y %H:%M') if p.registration_date else '—' }}</small></td>
+          <td>
+            {% if p.whatsapp_normalized() %}
+            <a href="https://wa.me/{{ p.whatsapp_normalized() }}" target="_blank" class="btn btn-sm btn-outline-success" title="Contacter sur WhatsApp">
+              <i class="bi bi-whatsapp"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="text-center py-5 text-muted">
+            <div class="mb-2"><i class="bi bi-inbox display-5"></i></div>
+            Aucun participant ne correspond aux filtres.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if participants %}
+  <div class="small text-muted mt-2">
+    Affichage de {{ participants|length }} participant(s) (limite 500). Utilisez les filtres pour affiner.
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.avatar-sm { width: 32px; height: 32px; font-size: 13px; }
+.card-glass {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+.rounded-chere { border-radius: 10px; }
+.rounded-chere:hover { background: rgba(0,0,0,0.04); }
+</style>
+{% endblock %}

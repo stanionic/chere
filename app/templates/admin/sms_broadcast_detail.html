@@ -1,0 +1,159 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="card-glass p-4 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <a href="{{ url_for('admin.sms_broadcast') }}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>Retour aux diffusions
+      </a>
+      <h4 class="mt-1 mb-1"><i class="bi bi-send-fill text-primary me-2"></i>{{ broadcast.title }}</h4>
+      <p class="text-muted mb-0">
+        Créée le {{ broadcast.created_at.strftime('%d/%m/%Y %H:%M') if broadcast.created_at else '—' }}
+        ·
+        Canal : <strong>{{ broadcast.channel }}</strong>
+        ·
+        Cible : <strong>{{ broadcast.target_scope }}</strong>
+      </p>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      {% if broadcast.status == 'sent' %}
+      <span class="badge bg-success fs-6 px-3 py-2">{{ broadcast.sent_count }} envoyé(s)</span>
+      {% elif broadcast.status == 'partial' %}
+      <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+        {{ broadcast.sent_count }} ok / {{ broadcast.failed_count }} échec(s)
+      </span>
+      {% elif broadcast.status == 'failed' %}
+      <span class="badge bg-danger fs-6 px-3 py-2">Échec</span>
+      {% else %}
+      <span class="badge bg-secondary fs-6 px-3 py-2">{{ broadcast.status }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card h-100 bg-primary bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-3 fw-bold text-primary">{{ broadcast.recipient_count or 0 }}</div>
+          <small class="text-muted">Destinataires</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card h-100 bg-success bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-3 fw-bold text-success">{{ broadcast.sent_count or 0 }}</div>
+          <small class="text-muted">Envoyés</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card h-100 bg-danger bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-3 fw-bold text-danger">{{ broadcast.failed_count or 0 }}</div>
+          <small class="text-muted">Échecs</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card h-100 bg-info bg-opacity-10 border-0">
+        <div class="card-body text-center">
+          <div class="fs-3 fw-bold text-info">
+            {{ '%.0f'|format(100 * (broadcast.sent_count or 0) / (broadcast.recipient_count or 1)) }}%
+          </div>
+          <small class="text-muted">Taux de succès</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 bg-light mb-4">
+    <div class="card-body">
+      <h6 class="text-uppercase text-muted small fw-semibold mb-2"><i class="bi bi-chat-dots me-1"></i>Message diffusé</h6>
+      <div class="p-3 bg-white rounded-3" style="white-space: pre-wrap;">{{ broadcast.message }}</div>
+    </div>
+  </div>
+
+  <h5 class="mb-3">Destinataires ({{ recipients|length }})</h5>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Nom</th>
+          <th>Numéro</th>
+          <th>Canal</th>
+          <th>Statut</th>
+          <th>Référence</th>
+          <th>Envoyé le</th>
+          <th>Erreur</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recipients %}
+        <tr>
+          <td>{{ r.full_name or '—' }}</td>
+          <td><code class="small">{{ format_phone_display(r.phone_number) }}</code></td>
+          <td>
+            {% if r.channel == 'whatsapp' %}
+            <span class="badge bg-success-subtle text-success">WhatsApp</span>
+            {% else %}
+            <span class="badge bg-primary-subtle text-primary">SMS</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.status == 'sent' %}
+            <span class="badge bg-success"><i class="bi bi-check2"></i> Envoyé</span>
+            {% elif r.status == 'delivered' %}
+            <span class="badge bg-info text-dark"><i class="bi bi-check2-all"></i> Délivré</span>
+            {% elif r.status == 'failed' %}
+            <span class="badge bg-danger"><i class="bi bi-x-lg"></i> Échec</span>
+            {% elif r.status == 'queued' %}
+            <span class="badge bg-secondary"><i class="bi bi-hourglass-split"></i> En file</span>
+            {% else %}
+            <span class="badge bg-light text-dark">{{ r.status }}</span>
+            {% endif %}
+          </td>
+          <td><small class="text-muted">{{ r.provider_reference or '—' }}</small></td>
+          <td><small class="text-muted">{{ r.sent_at.strftime('%d/%m %H:%M') if r.sent_at else '—' }}</small></td>
+          <td>
+            {% if r.error_message %}
+            <small class="text-danger" title="{{ r.error_message }}">{{ r.error_message[:40] }}{{ '…' if r.error_message|length > 40 else '' }}</small>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.channel == 'whatsapp' %}
+            <a href="{{ build_whatsapp_link(r.phone_number, broadcast.message) }}" target="_blank" class="btn btn-sm btn-outline-success" title="Ouvrir WhatsApp">
+              <i class="bi bi-whatsapp"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-muted">
+            <div class="mb-2"><i class="bi bi-inbox display-5"></i></div>
+            Aucun destinataire pour cette diffusion.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.card-glass {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+.rounded-chere { border-radius: 10px; }
+.rounded-chere:hover { background: rgba(0,0,0,0.04); }
+</style>
+{% endblock %}

@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash, current_app
+from flask import render_template, request, jsonify, redirect, url_for, flash, current_app, Response, abort, send_file
 from flask_login import current_user
 from app.blueprints.events import events_bp
 from app.models import Event, EventParticipant, Transaction
@@ -6,10 +6,12 @@ from app.extensions import db
 from app.blueprints.events.forms import EventRegistrationForm, MoMoPaymentForm
 from app.i18n import translate
 from app.services.momo_service import momo_service
+from app.services.qr_service import qr_for_events_list, qr_for_event_detail, generate_qr_png_bytes
 from datetime import datetime
 from itsdangerous import URLSafeSerializer, BadSignature
 from sqlalchemy import or_
 import uuid
+import io
 
 
 def _participant_token_serializer():
@@ -197,11 +199,16 @@ def register_event(slug):
                     }), 400
             
             # Créer le participant
+            whatsapp_value = form.whatsapp.data.strip() if hasattr(form, 'whatsapp') and form.whatsapp.data else None
+            if not whatsapp_value and form.phone.data:
+                whatsapp_value = form.phone.data
             participant = EventParticipant(
                 event_id=event.id,
                 full_name=form.full_name.data,
                 email=form.email.data,
                 phone=form.phone.data,
+                whatsapp=whatsapp_value,
+                allow_future_invites=bool(getattr(form, 'allow_future_invites', None) and form.allow_future_invites.data),
                 status="pending" if event.is_paid else "confirmed"
             )
             db.session.add(participant)
@@ -454,3 +461,65 @@ def event_registered(event_id):
 def card():
     """Endpoint de compatibilité pour les anciennes URLs."""
     return redirect(url_for("events.index"))
+
+
+def _qr_png_response(png_bytes: bytes, cache_minutes: int = 60):
+    """Helper pour retourner une réponse HTTP PNG avec cache."""
+    resp = Response(png_bytes, mimetype="image/png")
+    resp.headers["Cache-Control"] = f"public, max-age={cache_minutes * 60}"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
+
+
+@events_bp.route("/qrcode.png")
+def events_qrcode():
+    """Génère un QR Code pointant vers la liste des événements publiés.
+
+    Query params optionnels :
+      - size : int, côté en px (default 256)
+    """
+    try:
+        size = max(64, min(1024, request.args.get("size", 256, type=int)))
+    except (ValueError, TypeError):
+        size = 256
+    png_bytes = qr_for_events_list(size=size)
+    return _qr_png_response(png_bytes, cache_minutes=60 * 24)
+
+
+@events_bp.route("/event/<slug>/qrcode.png")
+def event_detail_qrcode(slug):
+    """Génère un QR Code pointant vers la page détail d'un événement publié.
+
+    Query params optionnels :
+      - size : int, côté en px (default 320)
+    """
+    event = Event.query.filter_by(slug=slug, is_published=True).first_or_404()
+    try:
+        size = max(64, min(1024, request.args.get("size", 320, type=int)))
+    except (ValueError, TypeError):
+        size = 320
+    png_bytes = qr_for_event_detail(slug=slug, size=size)
+    return _qr_png_response(png_bytes, cache_minutes=60 * 24)
+
+
+@events_bp.route("/api/qrcode/generate")
+def api_qrcode_generate():
+    """Génère un QR Code personnalisé (pour un contenu donné).
+    Reservé à un usage modéré : encode une URL fournie en query.
+
+    Query params :
+      - url : URL ou texte à encoder
+      - size : côté en px (128-1024, default 256)
+    """
+    data = request.args.get("url", "").strip()
+    if not data:
+        abort(400, description="Missing 'url' query param")
+    if len(data) > 2048:
+        abort(400, description="Data too long")
+    try:
+        size = max(128, min(1024, request.args.get("size", 256, type=int)))
+    except (ValueError, TypeError):
+        size = 256
+    png_bytes = generate_qr_png_bytes(data, size=size)
+    return _qr_png_response(png_bytes, cache_minutes=60)
+

@@ -118,6 +118,29 @@
                                     <small class="text-muted">{{ t('events.detail.phone_hint') }}</small>
                                 {% endif %}
                             </div>
+                            <div class="mb-3">
+                                {{ form.whatsapp.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success bg-opacity-10 border-success-subtle">
+                                        <i class="bi bi-whatsapp text-success"></i>
+                                    </span>
+                                    {{ form.whatsapp(class="form-control") }}
+                                </div>
+                                {% if form.whatsapp.errors %}
+                                    <small class="text-danger">{{ form.whatsapp.errors[0] }}</small>
+                                {% else %}
+                                    <small class="text-muted">{{ t('events.detail.whatsapp_hint') }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="mb-4 p-3 rounded-3 bg-info bg-opacity-5 border border-info border-opacity-25">
+                                <div class="form-check mb-0">
+                                    {{ form.allow_future_invites(class="form-check-input") }}
+                                    {{ form.allow_future_invites.label(class="form-check-label small fw-medium") }}
+                                </div>
+                                <small class="text-muted d-block mt-1 ms-4">
+                                    {{ t('events.detail.allow_future_invites_desc') }}
+                                </small>
+                            </div>
                             <div id="registrationFeedback" class="alert d-none" role="alert"></div>
                             <button type="submit" class="btn btn-primary w-100">
                                 {% if event.is_paid %}
@@ -186,7 +209,7 @@
             </div>
 
             <!-- Informations pratiques -->
-            <div class="card shadow-sm">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">{{ t('events.detail.practical_info') }}</h5>
                 </div>
@@ -209,6 +232,26 @@
                         <p class="mb-0">{{ reserved_count }}/{{ event.max_participants }}</p>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+
+            <!-- Carte QR Code -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h6 class="mb-0 text-uppercase small text-muted fw-bold tracking-wide">
+                        <i class="bi bi-qr-code-scan text-primary me-1"></i>{{ t('events.qr.share_event_title') }}
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <a href="{{ url_for('events.event_detail_qrcode', slug=event.slug, size=800) }}" target="_blank" title="{{ t('events.qr.show_larger') }}">
+                        <img src="{{ url_for('events.event_detail_qrcode', slug=event.slug, size=320) }}" alt="{{ t('events.qr.alt_event', title=event.title) }}" width="200" height="200" loading="lazy" class="rounded-3 shadow-sm" style="border:6px solid white;background:white;">
+                    </a>
+                    <p class="small text-muted mb-0 mt-2">{{ t('events.qr.share_event_hint') }}</p>
+                    <div class="mt-3">
+                        <a href="{{ url_for('events.event_detail_qrcode', slug=event.slug, size=1024) }}" class="btn btn-sm btn-outline-primary" target="_blank" download="event-{{ event.slug }}-qrcode.png">
+                            <i class="bi bi-download"></i> {{ t('events.qr.download_png') }}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

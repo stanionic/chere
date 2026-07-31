@@ -328,6 +328,8 @@ class EventParticipant(db.Model):
     full_name = db.Column(db.String(140), nullable=False)
     email = db.Column(db.String(150), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
+    whatsapp = db.Column(db.String(20))  # WhatsApp contact for future event invitations
+    allow_future_invites = db.Column(db.Boolean, default=False)  # Consent to receive future event invitations
     status = db.Column(db.String(30), default="pending")  # pending, confirmed, cancelled, no_show
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     confirmation_date = db.Column(db.DateTime)
@@ -339,10 +341,76 @@ class EventParticipant(db.Model):
 
     __table_args__ = (
         db.Index("idx_event_email", "event_id", "email"),
+        db.Index("idx_future_invites", "allow_future_invites"),
     )
+
+    def whatsapp_normalized(self):
+        if not self.whatsapp:
+            return None
+        digits = "".join(c for c in self.whatsapp if c.isdigit())
+        if digits.startswith("0") and len(digits) == 10:
+            return "250" + digits[1:]
+        if digits.startswith("250") and len(digits) == 12:
+            return digits
+        if len(digits) == 9:
+            return "250" + digits
+        return digits
 
     def __repr__(self):
         return f"<EventParticipant {self.full_name} - {self.event.title}>"
+
+
+class EventSmsBroadcast(db.Model):
+    """Enregistrement des diffusions SMS/WhatsApp pour les invitations aux événements."""
+    __tablename__ = "event_sms_broadcasts"
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=True, index=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    channel = db.Column(db.String(20), default="sms")  # sms, whatsapp, both
+    target_scope = db.Column(db.String(30), default="optin_all")  # optin_all, event_participants, specific_event
+    specific_event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=True)
+    recipient_count = db.Column(db.Integer, default=0)
+    sent_count = db.Column(db.Integer, default=0)
+    failed_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default="draft")  # draft, sending, sent, partial, failed
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    sent_at = db.Column(db.DateTime)
+
+    event = db.relationship("Event", foreign_keys=[event_id])
+    specific_event = db.relationship("Event", foreign_keys=[specific_event_id])
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+    recipients = db.relationship(
+        "EventSmsRecipient",
+        back_populates="broadcast",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
+
+    def __repr__(self):
+        return f"<EventSmsBroadcast {self.title} - {self.status}>"
+
+
+class EventSmsRecipient(db.Model):
+    """Destinataire d'une diffusion SMS/WhatsApp."""
+    __tablename__ = "event_sms_recipients"
+    id = db.Column(db.Integer, primary_key=True)
+    broadcast_id = db.Column(db.Integer, db.ForeignKey("event_sms_broadcasts.id"), nullable=False, index=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey("event_participants.id"), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=False, index=True)
+    full_name = db.Column(db.String(140))
+    channel = db.Column(db.String(20), default="sms")  # sms or whatsapp
+    status = db.Column(db.String(20), default="queued")  # queued, sent, delivered, failed
+    provider_reference = db.Column(db.String(100))
+    error_message = db.Column(db.String(255))
+    sent_at = db.Column(db.DateTime)
+
+    broadcast = db.relationship("EventSmsBroadcast", back_populates="recipients")
+    participant = db.relationship("EventParticipant")
+
+    def __repr__(self):
+        return f"<EventSmsRecipient {self.phone_number} - {self.status}>"
 
 
 class Transaction(db.Model):

@@ -1,0 +1,186 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="card-glass p-4 mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h4 class="mb-1"><i class="bi bi-whatsapp text-success me-2"></i>Invitations SMS & WhatsApp</h4>
+      <p class="text-muted mb-0">Envoyez des invitations groupées à vos contacts opt-in pour les prochains événements CHERE.</p>
+    </div>
+    <a href="{{ url_for('admin.event_participants') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-people me-1"></i>Voir les participants
+    </a>
+  </div>
+
+  <form method="post" class="mb-5">
+    {{ form.hidden_tag() }}
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card border-0 bg-light h-100">
+          <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-pencil-square me-2"></i>Composer la campagne</h5>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">{{ form.title.label }}</label>
+              {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+              {% for err in form.title.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">{{ form.message.label }}</label>
+              {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else "")) }}
+              {% for err in form.message.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+              <div class="small text-muted mt-1">
+                Variables disponibles :
+                <code>{name}</code> (prénom),
+                <code>{full_name}</code>,
+                <code>{email}</code>,
+                <code>{event}</code> (événement lié).
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ form.channel.label }}</label>
+                {{ form.channel(class="form-select") }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">{{ form.target_scope.label }}</label>
+                {{ form.target_scope(class="form-select", id="targetScope") }}
+              </div>
+              <div class="col-md-12" id="eventIdWrapper" style="display:none;">
+                <label class="form-label small fw-semibold">{{ form.event_id.label }}</label>
+                {{ form.event_id(class="form-select") }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-0 bg-light h-100">
+          <div class="card-body">
+            <h5 class="mb-3"><i class="bi bi-eye me-2"></i>Prévisualisation</h5>
+
+            {% if sample_message %}
+            <div class="mb-3">
+              <small class="text-uppercase text-muted fw-semibold">Exemple rendu (1er contact)</small>
+              <div class="mt-1 p-3 rounded-3 bg-white border shadow-sm" style="white-space: pre-wrap; font-family: inherit;">{{ sample_message }}</div>
+            </div>
+            {% else %}
+            <div class="mb-3 text-muted small p-3 border border-dashed rounded-3 bg-white bg-opacity-50">
+              Cliquez sur « Prévisualiser & Sélectionner » pour voir un aperçu et la liste des destinataires.
+            </div>
+            {% endif %}
+
+            {% if preview_recipients %}
+            <div class="mb-3">
+              <small class="text-uppercase text-muted fw-semibold">Destinataires (aperçu des 25 premiers)</small>
+              <div class="list-group list-group-flush mt-1 border rounded-3 overflow-hidden bg-white">
+                {% for p in preview_recipients %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                  <div>
+                    <strong class="small">{{ p.full_name }}</strong>
+                    <span class="text-muted small"> · </span>
+                    <span class="text-muted small">{{ p.email }}</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    {% if p.whatsapp %}
+                    <span class="badge bg-success-subtle text-success">WhatsApp</span>
+                    {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary">Téléphone</span>
+                    {% endif %}
+                    {% if p.allow_future_invites %}
+                    <i class="bi bi-check-circle text-info" title="Opt-in"></i>
+                    {% endif %}
+                    <a href="{{ build_whatsapp_link(p.whatsapp or p.phone, form.message.data) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                      <i class="bi bi-whatsapp"></i>
+                    </a>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 mt-4">
+              {{ form.submit_preview(class="btn btn-outline-primary flex-grow-1") }}
+              {{ form.submit_send(class="btn btn-success flex-grow-1") }}
+            </div>
+            <div class="small text-muted text-center mt-2">
+              <i class="bi bi-info-circle"></i> En mode simulation, les envois sont journalisés dans les logs (aucun SMS réel sauf si ENABLE_LIVE_SMS=true).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <h5 class="mb-3"><i class="bi bi-clock-history me-2"></i>Historique récent</h5>
+  {% if broadcasts %}
+  <div class="list-group">
+    {% for b in broadcasts %}
+    <a href="{{ url_for('admin.sms_broadcast_history', broadcast_id=b.id) }}" class="list-group-item list-group-item-action rounded-3 mb-2 border-0 bg-light bg-opacity-75 p-3">
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+          <h6 class="mb-1">{{ b.title }}</h6>
+          <div class="small text-muted mb-1">
+            <i class="bi bi-calendar3"></i> {{ b.created_at.strftime('%d/%m/%Y %H:%M') if b.created_at else '—' }}
+            ·
+            <i class="bi bi-radioactive"></i> {{ b.channel }}
+            ·
+            <i class="bi bi-bullseye"></i> {{ b.target_scope }}
+          </div>
+          <div class="small text-muted" style="white-space: pre-wrap;">{{ b.message[:120] }}{{ '…' if b.message|length > 120 else '' }}</div>
+        </div>
+        <div class="text-end">
+          {% if b.status == 'sent' %}
+          <span class="badge bg-success mb-2">{{ b.sent_count }} envoyé(s)</span>
+          {% elif b.status == 'partial' %}
+          <span class="badge bg-warning text-dark mb-2">{{ b.sent_count }} ok / {{ b.failed_count }} échec(s)</span>
+          {% elif b.status == 'failed' %}
+          <span class="badge bg-danger mb-2">Échec</span>
+          {% elif b.status == 'sending' %}
+          <span class="badge bg-info text-dark mb-2">En cours…</span>
+          {% else %}
+          <span class="badge bg-secondary mb-2">{{ b.status }}</span>
+          {% endif %}
+          <div class="small text-muted">{{ b.recipient_count }} destinataire(s)</div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted bg-light rounded-3">
+    <div class="mb-2"><i class="bi bi-megaphone display-5"></i></div>
+    Aucune diffusion envoyée pour le moment.
+  </div>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  var scope = document.getElementById('targetScope');
+  var wrap = document.getElementById('eventIdWrapper');
+  function toggle() {
+    if (wrap && scope) wrap.style.display = scope.value === 'specific_event' ? 'block' : 'none';
+  }
+  if (scope) scope.addEventListener('change', toggle);
+  toggle();
+})();
+</script>
+
+<style>
+.card-glass {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+.rounded-chere { border-radius: 10px; }
+.rounded-chere:hover { background: rgba(0,0,0,0.04); }
+.border-dashed { border-style: dashed !important; }
+</style>
+{% endblock %}

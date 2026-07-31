@@ -28,6 +28,19 @@ class EventRegistrationForm(FlaskForm):
         ],
         render_kw={"placeholder": "+250 7xx xxx xxx"}
     )
+    whatsapp = StringField(
+        "Numéro WhatsApp",
+        validators=[
+            Optional(),
+            Regexp(r'^\+?250\d{9}$|^\d{10}$|^$', message="Format: +250XXXXXXXXX ou 07XXXXXXXX")
+        ],
+        render_kw={"placeholder": "+250 7xx xxx xxx", "class": "form-control"}
+    )
+    allow_future_invites = BooleanField(
+        "J'accepte de recevoir des invitations pour les prochains événements CHERE",
+        validators=[Optional()],
+        render_kw={"class": "form-check-input"}
+    )
     submit = SubmitField("S'inscrire à l'événement")
 
     def __init__(self, *args, **kwargs):
@@ -38,6 +51,9 @@ class EventRegistrationForm(FlaskForm):
         self.email.render_kw = {"placeholder": translate("events.form.email_placeholder")}
         self.phone.label.text = translate("events.form.phone")
         self.phone.render_kw = {"placeholder": translate("events.form.phone_placeholder")}
+        self.whatsapp.label.text = translate("events.form.whatsapp")
+        self.whatsapp.render_kw = {"placeholder": translate("events.form.whatsapp_placeholder")}
+        self.allow_future_invites.label.text = translate("events.form.allow_future_invites")
         self.submit.label.text = translate("events.detail.register_now")
 
         for field in (self.full_name, self.email, self.phone):
@@ -52,6 +68,10 @@ class EventRegistrationForm(FlaskForm):
         for validator in self.phone.validators:
             if isinstance(validator, Regexp):
                 validator.message = translate("events.form.phone_format")
+
+        for validator in self.whatsapp.validators:
+            if isinstance(validator, Regexp):
+                validator.message = translate("events.form.whatsapp_format")
 
 
 class MoMoPaymentForm(FlaskForm):
