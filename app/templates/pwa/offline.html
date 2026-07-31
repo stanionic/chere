@@ -2,7 +2,18 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1446a0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" href="/static/img/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/img/favicon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/img/favicon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favicon-180.png">
+  <link rel="stylesheet" href="/static/pwa/install.css">
   <title>CHERE — Hors ligne</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -65,7 +76,11 @@
     <div class="chere-logo">CHERE</div>
     <h1>Connexion perdue</h1>
     <p>Vous êtes actuellement hors ligne. Les fonctionnalités limitées sont disponibles.<br>Reconnectez-vous pour profiter de toutes les fonctionnalités CHERE.</p>
-    <a href="/" class="btn-retry" onclick="window.location.reload()">Réessayer</a>
+    <a href="/" class="btn-retry" onclick="event.preventDefault(); window.location.reload()">Réessayer</a>
   </div>
+
+  <!-- PWA Install popup (global) -->
+  {% include "components/install_popup.html" %}
+  <script src="/static/pwa/install.js" defer></script>
 </body>
 </html>
