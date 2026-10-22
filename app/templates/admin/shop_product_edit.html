@@ -1,0 +1,109 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Modifier : {{ product.name }}</h4>
+  <a href="{{ url_for('admin.shop_products') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {{ form.hidden_tag() }}
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.name.label.text }}</label>
+      {{ form.name(class="form-control") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">{{ form.price.label.text }}</label>
+      {{ form.price(class="form-control", step="0.01", min=0) }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">{{ form.stock_quantity.label.text }}</label>
+      {{ form.stock_quantity(class="form-control", min=0) }}
+    </div>
+    <div class="col-12">
+      <label class="form-label small">{{ form.description.label.text }}</label>
+      {{ form.description(class="form-control", rows=3) }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.video_url.label.text }}</label>
+      {{ form.video_url(class="form-control") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.external_link.label.text }}</label>
+      {{ form.external_link(class="form-control") }}
+    </div>
+    <div class="col-md-8">
+      <label class="form-label small">Ajouter des images (total max 3)</label>
+      <input type="file" name="images" class="form-control" accept="image/*" multiple>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small">Remplacer la vidéo (60s max)</label>
+      <input type="file" name="video_file" id="videoFile" class="form-control" accept="video/*">
+      <div class="text-danger small mt-1" id="videoDurationError"></div>
+    </div>
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div class="form-check">
+        {{ form.is_published(class="form-check-input") }}
+        <label class="form-check-label small">{{ form.is_published.label.text }}</label>
+      </div>
+      {{ form.submit(class="btn btn-chere btn-sm") }}
+    </div>
+    {% if form.errors %}
+    <div class="col-12">
+      <div class="alert alert-danger py-2 small mb-0">
+        {% for field, errs in form.errors.items() %}<div>{{ errs[0] }}</div>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+<div class="card-glass p-4">
+  <h6 class="mb-3">Médias actuels</h6>
+  <div class="row g-3">
+    {% for img in product.images %}
+    <div class="col-md-3">
+      <div class="border rounded-3 p-2 text-center">
+        <img src="{{ url_for('static', filename='uploads/shop/' ~ img.filename) }}" alt="{{ img.alt_text or product.name }}" class="w-100 rounded-2" style="height: 120px; object-fit: cover;">
+        <form method="post" action="{{ url_for('admin.shop_product_image_delete', product_id=product.id, image_id=img.id) }}" class="mt-2" onsubmit="return confirm('Supprimer cette image ?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash me-1"></i>Supprimer</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    {% if product.video_file %}
+    <div class="col-md-6">
+      <div class="border rounded-3 p-2">
+        <video src="{{ url_for('static', filename='uploads/shop/' ~ product.video_file) }}" controls class="w-100 rounded-2" style="height: 120px;"></video>
+        <p class="small text-muted mt-2 mb-0"><i class="bi bi-camera-video me-1"></i>Vidéo téléversée (remplacez-la via le formulaire ci-dessus)</p>
+      </div>
+    </div>
+    {% endif %}
+    {% if not product.images and not product.has_video() %}
+    <div class="col-12 text-muted small">Aucun média pour ce produit.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('videoFile')?.addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  const errBox = document.getElementById('videoDurationError');
+  if (!file) { return; }
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.onloadedmetadata = function () {
+    URL.revokeObjectURL(url);
+    if (video.duration > 60) {
+      errBox.textContent = 'Video trop longue (' + Math.round(video.duration) + 's). Maximum 60 secondes.';
+      e.target.value = '';
+    } else {
+      errBox.textContent = '';
+    }
+  };
+  video.src = url;
+});
+</script>
+{% endblock %}

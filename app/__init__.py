@@ -2,6 +2,8 @@
 Application factory CHERE.
 """
 from flask import Flask, g, render_template, request
+from sqlalchemy import text
+from chere_admin_kit.chere_admin import init_admin
 from app.config import config
 from app.extensions import db, migrate, login_manager, csrf
 from app.i18n import (
@@ -13,6 +15,18 @@ from app.i18n import (
     translate,
     translate_event_type,
 )
+
+
+def _ensure_user_compatibility_columns():
+    inspector = db.inspect(db.engine)
+    if "users" not in inspector.get_table_names():
+        return
+    columns = {col["name"] for col in inspector.get_columns("users")}
+    if "username" not in columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN username VARCHAR(80) DEFAULT ''"))
+    if "status" not in columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'active' NOT NULL"))
+    db.session.commit()
 
 
 def create_app(config_name="development"):
@@ -28,6 +42,22 @@ def create_app(config_name="development"):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
+
+    init_admin(
+        app,
+        db,
+        User,
+        url_prefix="/admin-kit",
+        modules={
+            "messaging": "Messagerie",
+            "events": "Événements",
+            "users": "Utilisateurs",
+        },
+    )
+
+    with app.app_context():
+        db.create_all()
+        _ensure_user_compatibility_columns()
 
     from app.blueprints.home import home_bp
     from app.blueprints.about import about_bp
@@ -46,6 +76,7 @@ def create_app(config_name="development"):
     from app.blueprints.pos import pos_bp
     from app.blueprints.eval import eval_bp
     from app.blueprints.pwa import pwa_bp
+    from app.blueprints.shop import shop_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(about_bp, url_prefix="/about")
@@ -64,6 +95,7 @@ def create_app(config_name="development"):
     app.register_blueprint(pos_bp, url_prefix="/events/pos")
     app.register_blueprint(eval_bp, url_prefix="/eval")
     app.register_blueprint(pwa_bp)
+    app.register_blueprint(shop_bp, url_prefix="/shop")
 
     # CSRF exemption : endpoint install-event appelé depuis service worker / beacon
     # (pas d'accès au cookie csrf_token). Les champs sont anonymisés.

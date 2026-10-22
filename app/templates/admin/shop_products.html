@@ -1,0 +1,132 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-bag me-2"></i>Produits de la boutique</h4>
+  <a href="#new-product" class="btn btn-chere btn-sm"><i class="bi bi-plus-lg me-1"></i>Nouveau produit</a>
+</div>
+
+<div class="card-glass p-4 mb-4" id="new-product">
+  <h6 class="mb-3">Ajouter un produit</h6>
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {{ form.hidden_tag() }}
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.name.label.text }}</label>
+      {{ form.name(class="form-control", placeholder="Ex: Sacoles CHERE") }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">{{ form.price.label.text }}</label>
+      {{ form.price(class="form-control", step="0.01", min=0) }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">{{ form.stock_quantity.label.text }}</label>
+      {{ form.stock_quantity(class="form-control", min=0) }}
+    </div>
+    <div class="col-12">
+      <label class="form-label small">{{ form.description.label.text }}</label>
+      {{ form.description(class="form-control", rows=3) }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.video_url.label.text }}</label>
+      {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label small">{{ form.external_link.label.text }}</label>
+      {{ form.external_link(class="form-control", placeholder="https://...") }}
+    </div>
+    <div class="col-md-8">
+      <label class="form-label small">Images (3 max, jpg/png/webp)</label>
+      <input type="file" name="images" class="form-control" accept="image/*" multiple onchange="if(this.files.length>3){alert('Maximum 3 images.');this.value='';}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small">Vidéo (mp4/webm — 60s max)</label>
+      <input type="file" name="video_file" id="videoFile" class="form-control" accept="video/*">
+      <div class="text-danger small mt-1" id="videoDurationError"></div>
+    </div>
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div class="form-check">
+        {{ form.is_published(class="form-check-input") }}
+        <label class="form-check-label small">{{ form.is_published.label.text }}</label>
+      </div>
+      {{ form.submit(class="btn btn-chere btn-sm") }}
+    </div>
+    {% if form.errors %}
+    <div class="col-12">
+      <div class="alert alert-danger py-2 small mb-0">
+        {% for field, errs in form.errors.items() %}<div>{{ errs[0] }}</div>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+<div class="card-glass p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th></th><th>Produit</th><th>Prix</th><th>Stock</th><th>Médias</th><th>Statut</th><th>Commandes</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td style="width:56px;">
+            {% set img = p.primary_image() %}
+            {% if img %}
+              <img src="{{ url_for('static', filename='uploads/shop/' ~ img) }}" alt="{{ p.name }}" class="rounded" style="width:48px;height:48px;object-fit:cover;">
+            {% else %}
+              <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width:48px;height:48px;"><i class="bi bi-box-seam text-muted"></i></div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="fw-semibold">{{ p.name }}</div>
+            <a class="small text-muted" href="{{ url_for('shop.product_detail', slug=p.slug) }}" target="_blank">{{ p.slug }}</a>
+          </td>
+          <td>{{ '%g'|format(p.price) }} {{ p.currency or 'RWF' }}</td>
+          <td>
+            {% if p.stock_quantity %}{{ p.stock_quantity }}{% else %}<span class="text-muted small">Illimité</span>{% endif %}
+          </td>
+          <td class="small text-muted">
+            {{ p.images|length }} img{% if p.has_video() %} · <i class="bi bi-camera-video"></i>{% endif %}
+          </td>
+          <td>
+            {% if p.is_published %}<span class="badge bg-success-subtle text-success">Publié</span>
+            {% else %}<span class="badge bg-secondary-subtle text-secondary">Brouillon</span>{% endif %}
+          </td>
+          <td class="small">{{ p.orders.count() }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('admin.shop_product_edit', product_id=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('admin.shop_product_delete', product_id=p.id) }}" class="d-inline" onsubmit="return confirm('Supprimer ce produit et ses médias ?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted-soft py-4">Aucun produit. Ajoutez le premier produit de la boutique.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Limite le televersement video a 60 secondes (cote client).
+document.getElementById('videoFile')?.addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  const errBox = document.getElementById('videoDurationError');
+  if (!file) { return; }
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.onloadedmetadata = function () {
+    URL.revokeObjectURL(url);
+    if (video.duration > 60) {
+      errBox.textContent = 'Video trop longue (' + Math.round(video.duration) + 's). Maximum 60 secondes.';
+      e.target.value = '';
+    } else {
+      errBox.textContent = '';
+    }
+  };
+  video.src = url;
+});
+</script>
+{% endblock %}

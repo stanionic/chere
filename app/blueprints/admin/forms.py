@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField, SelectMultipleField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField, SelectMultipleField, DecimalField
 from wtforms.validators import DataRequired, Email, Optional, NumberRange, Length
 
 
 class LoginForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Email()])
+    email = StringField("Email ou pseudo", validators=[DataRequired()])
     password = PasswordField("Mot de passe", validators=[DataRequired()])
     remember = BooleanField("Se souvenir de moi")
 
@@ -99,3 +99,21 @@ class EventSmsBroadcastForm(FlaskForm):
     )
     submit_preview = SubmitField("Prévisualiser & Sélectionner")
     submit_send = SubmitField("🚀 Envoyer immédiatement")
+
+
+class ShopProductForm(FlaskForm):
+    """Produit de la boutique publique (géré par l'admin).
+    Les fichiers (5 images max + 1 vidéo) sont traités directement via
+    request.files dans la route, le formulaire ne porte que les champs texte."""
+    name = StringField("Nom du produit", validators=[DataRequired(), Length(max=160)])
+    description = TextAreaField("Description", validators=[DataRequired(), Length(max=5000)])
+    price = DecimalField("Prix (RWF)", validators=[DataRequired(), NumberRange(min=0)], places=2)
+    stock_quantity = IntegerField(
+        "Stock (0 = illimité)",
+        validators=[Optional(), NumberRange(min=0)],
+        default=0,
+    )
+    is_published = BooleanField("Publié sur la boutique")
+    video_url = StringField("Lien vidéo (YouTube / MP4)", validators=[Optional(), Length(max=255)])
+    external_link = StringField("Lien externe optionnel", validators=[Optional(), Length(max=255)])
+    submit = SubmitField("Enregistrer le produit")

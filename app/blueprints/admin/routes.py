@@ -1,13 +1,18 @@
 import json
+import os
+import uuid
 from datetime import datetime
+from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
 from app.blueprints.admin import admin_bp
-from app.blueprints.admin.forms import LoginForm, BroadcastNotificationForm, MobileInstallSettingsForm, EventSmsBroadcastForm
+from app.blueprints.admin.forms import LoginForm, BroadcastNotificationForm, MobileInstallSettingsForm, EventSmsBroadcastForm, ShopProductForm
 from app.models import (
     User, Article, Service, Project, Partner, TeamMember,
     Statistic, Message, NewsletterSubscriber, Sector, Notification, UserNotification,
     AppInstallation, PwaConfig, Event, EventParticipant, EventSmsBroadcast, EventSmsRecipient,
+    PosOrder, BaristaOrder, Transaction, ShopProduct, ShopProductImage, ShopOrder,
 )
 from app.extensions import db
 from app.services.sms_service import sms_service, build_whatsapp_link, format_phone_display, normalize_phone_number
@@ -32,7 +37,11 @@ def login():
         return redirect(url_for("admin.dashboard"))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower()).first()
+        identifier = form.email.data.strip()
+        if "@" in identifier:
+            user = User.query.filter_by(email=identifier.lower()).first()
+        else:
+            user = User.query.filter_by(username=identifier).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             from datetime import datetime
@@ -41,7 +50,7 @@ def login():
             db.session.commit()
             next_page = request.args.get("next") or url_for("admin.dashboard")
             return redirect(next_page)
-        flash("Email ou mot de passe incorrect.", "danger")
+        flash("Email, pseudo ou mot de passe incorrect.", "danger")
     return render_template("admin/login.html", form=form)
 
 
@@ -102,6 +111,67 @@ def messages():
     return render_template("admin/messages.html", messages=all_messages)
 
 
+@admin_bp.route("/end-of-day")
+@login_required
+def end_of_day():
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    selected_date = request.args.get("date") or datetime.utcnow().strftime("%Y-%m-%d")
+    try:
+        report_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Date invalide.", "warning")
+        report_date = datetime.utcnow().date()
+
+    start = datetime.combine(report_date, datetime.min.time())
+    end = start + timedelta(days=1)
+
+    pos_orders = PosOrder.query.filter(PosOrder.created_at >= start, PosOrder.created_at < end).all()
+    barista_orders = BaristaOrder.query.filter(BaristaOrder.created_at >= start, BaristaOrder.created_at < end).all()
+
+    pos_total = sum(float(order.total_amount or 0) for order in pos_orders)
+    barista_total = sum(float(order.total_amount or 0) for order in barista_orders)
+    selected_day_total = pos_total + barista_total
+
+    all_dates = set()
+    for order in PosOrder.query.all():
+        if order.created_at:
+            all_dates.add(order.created_at.date())
+    for order in BaristaOrder.query.all():
+        if order.created_at:
+            all_dates.add(order.created_at.date())
+
+    daily_totals = []
+    for day in sorted(all_dates, reverse=True):
+        day_start = datetime.combine(day, datetime.min.time())
+        day_end = day_start + timedelta(days=1)
+        pos_day_total = float(sum(
+            float(order.total_amount or 0) for order in PosOrder.query.filter(PosOrder.created_at >= day_start, PosOrder.created_at < day_end).all()
+        ))
+        barista_day_total = float(sum(
+            float(order.total_amount or 0) for order in BaristaOrder.query.filter(BaristaOrder.created_at >= day_start, BaristaOrder.created_at < day_end).all()
+        ))
+        daily_totals.append({
+            "date": day,
+            "pos_total": pos_day_total,
+            "barista_total": barista_day_total,
+            "total": pos_day_total + barista_day_total,
+        })
+
+    return render_template(
+        "admin/end_of_day.html",
+        selected_date=report_date,
+        pos_orders=pos_orders,
+        barista_orders=barista_orders,
+        pos_total=pos_total,
+        barista_total=barista_total,
+        selected_day_total=selected_day_total,
+        daily_totals=daily_totals,
+    )
+
+
 @admin_bp.route("/articles")
 @login_required
 def articles():
@@ -114,6 +184,17 @@ def articles():
 def projects():
     all_projects = Project.query.order_by(Project.created_at.desc()).all()
     return render_template("admin/projects.html", projects=all_projects)
+
+
+@admin_bp.route("/transactions")
+@login_required
+def transactions():
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    transactions = Transaction.query.order_by(Transaction.created_at.desc()).all()
+    return render_template("admin/transactions.html", transactions=transactions)
 
 
 @admin_bp.route("/mobile-install", methods=["GET", "POST"])
@@ -464,3 +545,218 @@ def event_contacts_export():
             "Content-Disposition": "attachment; filename=chere_contacts_optin.csv",
         },
     )
+
+
+# ---- Boutique: gestion des produits
+ALLOWED_SHOP_IMAGE_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
+ALLOWED_SHOP_VIDEO_EXT = {"mp4", "webm", "mov"}
+
+
+def _shop_upload_dir():
+    """Sous-dossier dedie aux medias de la boutique (app/static/uploads/shop)."""
+    from flask import current_app
+    base = os.path.join(current_app.config["UPLOAD_FOLDER"], "shop")
+    os.makedirs(base, exist_ok=True)
+    return base
+
+
+def _unique_slug(model, name, exclude_id=None):
+    from app.blueprints.shop.routes import slugify
+    base = slugify(name)
+    slug = base
+    counter = 2
+    while True:
+        q = model.query.filter(model.slug == slug)
+        if exclude_id:
+            q = q.filter(model.id != exclude_id)
+        if not q.first():
+            return slug
+        slug = f"{base}-{counter}"
+        counter += 1
+
+
+@admin_bp.route("/shop-products", methods=["GET", "POST"])
+@login_required
+def shop_products():
+    """Liste + creation des produits de la boutique."""
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    form = ShopProductForm()
+    if form.validate_on_submit():
+        product = ShopProduct(
+            name=form.name.data.strip(),
+            description=form.description.data.strip(),
+            price=float(form.price.data),
+            stock_quantity=form.stock_quantity.data or 0,
+            is_published=bool(form.is_published.data),
+            video_url=(form.video_url.data or "").strip() or None,
+            external_link=(form.external_link.data or "").strip() or None,
+        )
+        product.slug = _unique_slug(ShopProduct, product.name)
+        db.session.add(product)
+        db.session.flush()
+
+        upload_dir = _shop_upload_dir()
+        # Images (max 3)
+        files = [f for f in request.files.getlist("images") if f and f.filename]
+        for order, file in enumerate(files[:3]):
+            ext = secure_filename(file.filename).rsplit(".", 1)[-1].lower()
+            if ext not in ALLOWED_SHOP_IMAGE_EXT:
+                continue
+            filename = f"shop_{product.id}_{uuid.uuid4().hex[:8]}.{ext}"
+            file.save(os.path.join(upload_dir, filename))
+            db.session.add(ShopProductImage(product_id=product.id, filename=filename, order=order))
+
+        # Video uploadee
+        video = request.files.get("video_file")
+        if video and video.filename:
+            ext = secure_filename(video.filename).rsplit(".", 1)[-1].lower()
+            if ext in ALLOWED_SHOP_VIDEO_EXT:
+                filename = f"video_{product.id}_{uuid.uuid4().hex[:8]}.{ext}"
+                video.save(os.path.join(upload_dir, filename))
+                product.video_file = filename
+
+        db.session.commit()
+        flash("Produit ajouté à la boutique.", "success")
+        return redirect(url_for("admin.shop_products"))
+
+    products = ShopProduct.query.order_by(ShopProduct.created_at.desc()).all()
+    return render_template("admin/shop_products.html", products=products, form=form)
+
+
+@admin_bp.route("/shop-products/<int:product_id>/edit", methods=["GET", "POST"])
+@login_required
+def shop_product_edit(product_id):
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    product = ShopProduct.query.get_or_404(product_id)
+    form = ShopProductForm(obj=product)
+    if request.method == "POST" and form.validate_on_submit():
+        product.name = form.name.data.strip()
+        product.description = form.description.data.strip()
+        product.price = float(form.price.data)
+        product.stock_quantity = form.stock_quantity.data or 0
+        product.is_published = bool(form.is_published.data)
+        product.video_url = (form.video_url.data or "").strip() or None
+        product.external_link = (form.external_link.data or "").strip() or None
+
+        upload_dir = _shop_upload_dir()
+        # Nouvelles images ajoutees (total max 3)
+        existing = len(product.images)
+        files = [f for f in request.files.getlist("images") if f and f.filename]
+        for offset, file in enumerate(files[: max(0, 3 - existing)]):
+            ext = secure_filename(file.filename).rsplit(".", 1)[-1].lower()
+            if ext not in ALLOWED_SHOP_IMAGE_EXT:
+                continue
+            filename = f"shop_{product.id}_{uuid.uuid4().hex[:8]}.{ext}"
+            file.save(os.path.join(upload_dir, filename))
+            db.session.add(ShopProductImage(product_id=product.id, filename=filename, order=existing + offset))
+
+        video = request.files.get("video_file")
+        if video and video.filename:
+            ext = secure_filename(video.filename).rsplit(".", 1)[-1].lower()
+            if ext in ALLOWED_SHOP_VIDEO_EXT:
+                # Supprime l'ancienne video
+                if product.video_file:
+                    old = os.path.join(upload_dir, product.video_file)
+                    if os.path.exists(old):
+                        os.remove(old)
+                filename = f"video_{product.id}_{uuid.uuid4().hex[:8]}.{ext}"
+                video.save(os.path.join(upload_dir, filename))
+                product.video_file = filename
+
+        db.session.commit()
+        flash("Produit mis à jour.", "success")
+        return redirect(url_for("admin.shop_products"))
+
+    return render_template("admin/shop_product_edit.html", product=product, form=form)
+
+
+@admin_bp.route("/shop-products/<int:product_id>/image/<int:image_id>/delete", methods=["POST"])
+@login_required
+def shop_product_image_delete(product_id, image_id):
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    image = ShopProductImage.query.filter_by(id=image_id, product_id=product_id).first_or_404()
+    path = os.path.join(_shop_upload_dir(), image.filename)
+    if os.path.exists(path):
+        os.remove(path)
+    db.session.delete(image)
+    db.session.commit()
+    flash("Image supprimée.", "info")
+    return redirect(url_for("admin.shop_product_edit", product_id=product_id))
+
+
+@admin_bp.route("/shop-products/<int:product_id>/delete", methods=["POST"])
+@login_required
+def shop_product_delete(product_id):
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    product = ShopProduct.query.get_or_404(product_id)
+    upload_dir = _shop_upload_dir()
+    for image in product.images:
+        path = os.path.join(upload_dir, image.filename)
+        if os.path.exists(path):
+            os.remove(path)
+    if product.video_file:
+        path = os.path.join(upload_dir, product.video_file)
+        if os.path.exists(path):
+            os.remove(path)
+    db.session.delete(product)
+    db.session.commit()
+    flash("Produit supprimé.", "info")
+    return redirect(url_for("admin.shop_products"))
+
+
+@admin_bp.route("/shop-orders")
+@login_required
+def shop_orders():
+    """Historique des commandes de la boutique."""
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    status_filter = request.args.get("status", "", type=str).strip()
+    q = ShopOrder.query
+    if status_filter:
+        q = q.filter_by(status=status_filter)
+    orders = q.order_by(ShopOrder.created_at.desc()).limit(500).all()
+    stats = {
+        "total": ShopOrder.query.count(),
+        "paid": ShopOrder.query.filter_by(status="paid").count(),
+        "pending": ShopOrder.query.filter_by(status="pending").count(),
+        "failed": ShopOrder.query.filter_by(status="failed").count(),
+        "revenue": sum(float(o.total_amount or 0) for o in ShopOrder.query.filter_by(status="paid").all()),
+    }
+    return render_template("admin/shop_orders.html", orders=orders, stats=stats, current_status=status_filter)
+
+
+@admin_bp.route("/shop-orders/<int:order_id>/status", methods=["POST"])
+@login_required
+def shop_order_status(order_id):
+    """Met a jour le statut d'une commande (ex: delivered apres livraison)."""
+    if not current_user.has_role("admin"):
+        flash("Accès réservé aux administrateurs.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    order = ShopOrder.query.get_or_404(order_id)
+    new_status = request.form.get("status", "").strip()
+    allowed = {"pending", "paid", "failed", "cancelled", "delivered"}
+    if new_status in allowed:
+        order.status = new_status
+        if new_status == "paid" and not order.paid_at:
+            order.paid_at = datetime.utcnow()
+        db.session.commit()
+        flash(f"Statut de la commande {order.reference} mis à jour : {new_status}.", "success")
+    else:
+        flash("Statut invalide.", "warning")
+    return redirect(url_for("admin.shop_orders"))
+

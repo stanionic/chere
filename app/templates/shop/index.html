@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('shop.index.title') }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5"><i class="bi bi-bag-heart text-primary me-2"></i>{{ t('shop.index.title') }}</h1>
+            <p class="lead text-muted">{{ t('shop.index.subtitle') }}</p>
+        </div>
+        <div class="col-md-4">
+            <form class="input-group" method="get" action="{{ url_for('shop.index') }}">
+                <input type="text" class="form-control" placeholder="{{ t('shop.index.search_placeholder') }}" name="q" value="{{ search_query }}">
+                <button class="btn btn-primary" type="submit">{{ t('events.index.search') }}</button>
+            </form>
+        </div>
+    </div>
+
+    {% if products.items %}
+        <div class="row">
+            {% for product in products.items %}
+                <div class="col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 shop-card" style="transition: all 0.3s ease;">
+                        {% set image = product.primary_image() %}
+                        {% if image %}
+                            <img src="{{ url_for('static', filename='uploads/shop/' ~ image) }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                        {% elif product.has_video() %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-play-circle text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-muted small">
+                                {{ product.description[:90] }}{% if product.description|length > 90 %}...{% endif %}
+                            </p>
+                            <div class="alert alert-info py-2 px-3 mb-0 small">
+                                <strong>{{ '%g'|format(product.price) }} {{ product.currency or 'RWF' }}</strong>
+                                {% if product.stock_quantity %}
+                                    <span class="text-muted">· {{ t('shop.index.in_stock', count=product.stock_quantity) }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="{{ url_for('shop.product_detail', slug=product.slug) }}" class="btn btn-chere btn-sm w-100">
+                                <i class="bi bi-cart-plus me-1"></i>{{ t('shop.index.buy_button') }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if products.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-5">
+                    {% if products.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('shop.index', page=products.prev_num, q=search_query) }}">{{ t('events.index.previous') }}</a>
+                        </li>
+                    {% endif %}
+                    {% for page_num in products.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == products.page %}
+                                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('shop.index', page=page_num, q=search_query) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('shop.index', page=products.next_num, q=search_query) }}">{{ t('events.index.next') }}</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0">{% if search_query %}{{ t('shop.index.no_results', query='<strong>' ~ search_query ~ '</strong>')|safe }}{% else %}{{ t('shop.index.empty') }}{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .shop-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

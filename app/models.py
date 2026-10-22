@@ -75,10 +75,12 @@ class Role(db.Model):
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False, default="", index=True)
     full_name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="active", index=True)
     is_active_account = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
@@ -89,15 +91,30 @@ class User(UserMixin, db.Model):
         lazy="dynamic",
     )
 
+    @staticmethod
+    def _normalize_username(value):
+        value = (value or "").strip()
+        return value.split("@")[0][:80] if "@" in value else value[:80]
+
+    @property
+    def is_active(self):
+        return self.is_active_account and self.status == "active"
+
+    @property
+    def display_name(self):
+        return self.full_name or self.username or self.email
+
+    @classmethod
+    def ensure_username(cls, user):
+        if user and not user.username:
+            user.username = cls._normalize_username(user.email or user.full_name)
+        return user
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-    @property
-    def is_active(self):
-        return self.is_active_account
 
     def has_role(self, role_name):
         return self.role and self.role.name == role_name
@@ -842,6 +859,91 @@ class PwaConfig(db.Model):
 
     def __repr__(self):
         return f"<PwaConfig enabled={self.enabled}>"
+
+
+class ShopProduct(db.Model):
+    """Produit de la boutique publique, geré par l'admin.
+    Supporte jusqu'a 3 images + 1 video (max 60s, upload ou lien) ou un lien externe.
+    Le paiement se fait via MoMo."""
+    __tablename__ = "shop_products"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(160), nullable=False)
+    slug = db.Column(db.String(180), unique=True, nullable=False, index=True)
+    description = db.Column(db.Text, nullable=False, default="")
+    price = db.Column(db.Float, nullable=False, default=0.0)  # RWF
+    currency = db.Column(db.String(3), default="RWF")
+    stock_quantity = db.Column(db.Integer, default=0)  # 0 = illimité
+    # Médias : 1 vidéo téléversée (fichier) OU 1 lien vidéo externe
+    video_file = db.Column(db.String(255))       # chemin stat vers la vidéo uploadée
+    video_url = db.Column(db.String(255))        # lien YouTube/Vimeo/MP4 externe
+    # Lien externe optionnel (page produit, réseau social, etc.)
+    external_link = db.Column(db.String(255))
+    is_published = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    images = db.relationship(
+        "ShopProductImage",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ShopProductImage.order",
+        lazy="select",
+    )
+    orders = db.relationship("ShopOrder", back_populates="product", lazy="dynamic")
+
+    def has_video(self):
+        return bool(self.video_file or self.video_url)
+
+    def primary_image(self):
+        return self.images[0].filename if self.images else None
+
+    def __repr__(self):
+        return f"<ShopProduct {self.name}>"
+
+
+class ShopProductImage(db.Model):
+    """Image téléversée pour un produit de la boutique (max 3 par produit)."""
+    __tablename__ = "shop_product_images"
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("shop_products.id"), nullable=False, index=True)
+    filename = db.Column(db.String(255), nullable=False)  # chemin relatif sous static/uploads/shop
+    alt_text = db.Column(db.String(200))
+    order = db.Column(db.Integer, default=0)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    product = db.relationship("ShopProduct", back_populates="images")
+
+    def __repr__(self):
+        return f"<ShopProductImage {self.filename}>"
+
+
+class ShopOrder(db.Model):
+    """Commande passée sur la boutique, payée via MoMo."""
+    __tablename__ = "shop_orders"
+    id = db.Column(db.Integer, primary_key=True)
+    reference = db.Column(db.String(40), unique=True, nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("shop_products.id"), nullable=False, index=True)
+    customer_name = db.Column(db.String(140), nullable=False)
+    customer_phone = db.Column(db.String(20), nullable=False)  # numéro MoMo
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    unit_price = db.Column(db.Float, nullable=False, default=0.0)
+    total_amount = db.Column(db.Float, nullable=False, default=0.0)
+    currency = db.Column(db.String(3), default="RWF")
+    # Statut: pending, paid, failed, cancelled, delivered
+    status = db.Column(db.String(20), default="pending", index=True)
+    momo_reference = db.Column(db.String(100))  # référence renvoyée par l'API MoMo
+    response_data = db.Column(db.JSON)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    paid_at = db.Column(db.DateTime)
+
+    product = db.relationship("ShopProduct", back_populates="orders")
+
+    def is_paid(self):
+        return self.status == "paid"
+
+    def __repr__(self):
+        return f"<ShopOrder {self.reference} - {self.status}>"
 
 
 class AuditLog(db.Model):

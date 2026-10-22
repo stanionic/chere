@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('shop.status.title') }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5 text-center">
+                    {% if order.status == 'paid' %}
+                        <div class="display-4 text-success mb-3"><i class="bi bi-check-circle-fill"></i></div>
+                        <h3>{{ t('shop.status.paid_title') }}</h3>
+                        <p class="text-muted">{{ t('shop.status.paid_subtitle') }}</p>
+                    {% elif order.status == 'failed' %}
+                        <div class="display-4 text-danger mb-3"><i class="bi bi-x-circle-fill"></i></div>
+                        <h3>{{ t('shop.status.failed_title') }}</h3>
+                        <p class="text-muted">{{ t('shop.status.failed_subtitle') }}</p>
+                        <a href="{{ url_for('shop.checkout', order_id=order.id, token=order_token) }}" class="btn btn-chere mt-2">
+                            <i class="bi bi-arrow-repeat me-1"></i>{{ t('shop.status.retry') }}
+                        </a>
+                    {% else %}
+                        <div class="display-4 text-warning mb-3"><i class="bi bi-clock-history"></i></div>
+                        <h3>{{ t('shop.status.pending_title') }}</h3>
+                        <p class="text-muted">{{ t('shop.status.pending_subtitle') }}</p>
+                        <a href="{{ url_for('shop.checkout', order_id=order.id, token=order_token) }}" class="btn btn-outline-primary mt-2">
+                            <i class="bi bi-phone me-1"></i>{{ t('shop.status.continue_payment') }}
+                        </a>
+                    {% endif %}
+
+                    <div class="text-start mt-4">
+                        <h6 class="text-uppercase small text-muted">{{ t('shop.status.summary') }}</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td class="text-muted">{{ t('shop.status.reference') }}</td><td class="fw-semibold">{{ order.reference }}</td></tr>
+                                <tr><td class="text-muted">{{ t('shop.status.product') }}</td><td>{{ order.product.name }} × {{ order.quantity }}</td></tr>
+                                <tr><td class="text-muted">{{ t('shop.checkout.customer') }}</td><td>{{ order.customer_name }}</td></tr>
+                                <tr><td class="text-muted">{{ t('shop.checkout.momo_label') }}</td><td>{{ order.customer_phone }}</td></tr>
+                                <tr><td class="text-muted">{{ t('shop.checkout.total') }}</td><td class="fw-semibold text-primary">{{ '%g'|format(order.total_amount) }} {{ order.currency }}</td></tr>
+                                {% if order.paid_at %}
+                                <tr><td class="text-muted">{{ t('events.registered.payment_date') }}</td><td>{{ format_datetime(order.paid_at) }}</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-center mt-3">
+                        <a href="{{ url_for('shop.index') }}" class="btn btn-outline-secondary btn-sm">{{ t('shop.status.back_to_shop') }}</a>
+                    </div>
+                </div>
+            </div>
+            <p class="small text-center text-muted mt-3"><i class="bi bi-info-circle me-1"></i>{{ t('shop.status.keep_link') }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0"><i class="bi bi-receipt me-2"></i>Commandes de la boutique</h4>
+  <div class="btn-group btn-group-sm">
+    <a href="{{ url_for('admin.shop_orders') }}" class="btn btn-outline-primary {% if not current_status %}active{% endif %}">Toutes</a>
+    {% for s in ['pending', 'paid', 'failed', 'cancelled', 'delivered'] %}
+      <a href="{{ url_for('admin.shop_orders', status=s) }}" class="btn btn-outline-primary {% if current_status == s %}active{% endif %}">{{ s|capitalize }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="h4 mb-0">{{ stats.total }}</div>
+      <div class="small text-muted">Commandes</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="h4 mb-0 text-success">{{ stats.paid }}</div>
+      <div class="small text-muted">Payées</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="h4 mb-0 text-warning">{{ stats.pending }}</div>
+      <div class="small text-muted">En attente</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card-glass p-3 text-center">
+      <div class="h4 mb-0 text-primary">{{ '%g'|format(stats.revenue) }} RWF</div>
+      <div class="small text-muted">Revenus (payées)</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-glass p-4">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr><th>Référence</th><th>Produit</th><th>Client</th><th>MoMo</th><th>Total</th><th>Statut</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="small fw-semibold">{{ o.reference }}</td>
+          <td class="small">{{ o.product.name }} × {{ o.quantity }}</td>
+          <td class="small">{{ o.customer_name }}</td>
+          <td class="small">{{ o.customer_phone }}</td>
+          <td class="small fw-semibold">{{ '%g'|format(o.total_amount) }} {{ o.currency }}</td>
+          <td>
+            {% if o.status == 'paid' %}<span class="badge bg-success-subtle text-success">Payée</span>
+            {% elif o.status == 'pending' %}<span class="badge bg-warning-subtle text-warning">En attente</span>
+            {% elif o.status == 'delivered' %}<span class="badge bg-info-subtle text-info">Livrée</span>
+            {% elif o.status == 'cancelled' %}<span class="badge bg-secondary-subtle text-secondary">Annulée</span>
+            {% else %}<span class="badge bg-danger-subtle text-danger">Échouée</span>{% endif %}
+          </td>
+          <td class="small text-muted">{{ o.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.shop_order_status', order_id=o.id) }}" class="d-flex gap-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="status" class="form-select form-select-sm" style="width:auto;">
+                {% for s in ['pending', 'paid', 'failed', 'cancelled', 'delivered'] %}
+                <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-sm btn-outline-primary" title="Mettre à jour"><i class="bi bi-check-lg"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted-soft py-4">Aucune commande pour le moment.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

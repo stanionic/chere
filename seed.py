@@ -36,10 +36,11 @@ def seed_admin():
         user.full_name = "Admin CHERE"
         user.role_id = admin_role.id
 
-    user.set_password("Stan-Chere.Admin..Good")
+    user.username = "Adminb"
+    user.set_password("StanAdminChere2026")
     db.session.add(user)
     db.session.commit()
-    print("[OK] Admin cree - Email: ADMIN-CHERE / MDP: Stan-Chere.Admin..Good")
+    print("[OK] Admin cree - Pseudo: Adminb / MDP: StanAdminChere2026")
 
 
 def seed_statistics():

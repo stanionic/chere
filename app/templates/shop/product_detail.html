@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}">{{ t('shop.index.title') }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Galerie média -->
+        <div class="col-lg-6">
+            <div id="shopGallery" class="card-glass p-3">
+                {% set images = product.images %}
+                {% if images %}
+                    <img id="galleryMain" src="{{ url_for('static', filename='uploads/shop/' ~ images[0].filename) }}" alt="{{ product.name }}" class="w-100 rounded-3" style="height: 380px; object-fit: cover;">
+                    {% if images|length > 1 %}
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        {% for img in images %}
+                        <img src="{{ url_for('static', filename='uploads/shop/' ~ img.filename) }}" alt="{{ img.alt_text or product.name }}" class="rounded-2 gallery-thumb {% if loop.first %}active{% endif %}" style="width: 72px; height: 72px; object-fit: cover; cursor: pointer;">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded-3" style="height: 380px;">
+                        <i class="bi bi-box-seam text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                {% endif %}
+
+                {% if product.has_video() %}
+                <div class="mt-3">
+                    <h6 class="mb-2"><i class="bi bi-play-btn me-1"></i>{{ t('shop.detail.video') }}</h6>
+                    {% if product.video_file %}
+                        <video src="{{ url_for('static', filename='uploads/shop/' ~ product.video_file) }}" controls class="w-100 rounded-3"></video>
+                    {% elif 'youtube.com' in (product.video_url or '') or 'youtu.be' in (product.video_url or '') %}
+                        {% set vid = product.video_url.split('v=')[-1].split('/')[-1].split('?')[0] %}
+                        <iframe src="https://www.youtube.com/embed/{{ vid }}" class="w-100 rounded-3" style="height: 320px; border:0;" allowfullscreen></iframe>
+                    {% elif product.video_url %}
+                        <video src="{{ product.video_url }}" controls class="w-100 rounded-3"></video>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Infos + achat -->
+        <div class="col-lg-6">
+            <div class="card-glass p-4">
+                <h1 class="h3 mb-1">{{ product.name }}</h1>
+                <div class="h4 text-primary my-3">{{ '%g'|format(product.price) }} {{ product.currency or 'RWF' }}</div>
+                <p class="text-muted" style="white-space: pre-line;">{{ product.description }}</p>
+
+                <div class="small text-muted mb-3">
+                    {% if product.stock_quantity %}
+                        <span class="badge bg-success-subtle text-success">{{ t('shop.index.in_stock', count=product.stock_quantity) }}</span>
+                    {% else %}
+                        <span class="badge bg-info-subtle text-info">{{ t('shop.detail.available') }}</span>
+                    {% endif %}
+                </div>
+
+                <hr>
+                <h5 class="mb-3"><i class="bi bi-phone me-2"></i>{{ t('shop.detail.buy_with_momo') }}</h5>
+
+                <form id="buyForm" method="post" action="{{ url_for('shop.buy', slug=product.slug) }}">
+                    {{ form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">{{ form.customer_name.label.text }}</label>
+                            {{ form.customer_name(class="form-control", placeholder=t('shop.checkout.name_placeholder')) }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.quantity.label.text }}</label>
+                            {{ form.quantity(class="form-control", min=1, value=1) }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.customer_phone.label.text }}</label>
+                            {{ form.customer_phone(class="form-control form-control-lg", placeholder=t('shop.checkout.momo_placeholder')) }}
+                            <small class="text-muted">{{ t('shop.checkout.momo_format') }}</small>
+                        </div>
+                        {% if form.errors %}
+                        <div class="col-12">
+                            <div class="alert alert-danger py-2 small mb-0">
+                                {% for field, errors in form.errors.items() %}<div>{{ errors[0] }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-chere btn-lg w-100" id="buyButton">
+                                <i class="bi bi-lock me-2"></i>{{ t('shop.checkout.pay_now') }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {% if product.external_link %}
+                <a href="{{ product.external_link }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm mt-3">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>{{ t('shop.detail.external_link') }}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if related %}
+    <div class="mt-5">
+        <h4 class="mb-3">{{ t('shop.detail.other_products') }}</h4>
+        <div class="row">
+            {% for p in related %}
+            <div class="col-md-3 col-6 mb-3">
+                <a href="{{ url_for('shop.product_detail', slug=p.slug) }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-0 shop-card">
+                        {% set img = p.primary_image() %}
+                        {% if img %}
+                        <img src="{{ url_for('static', filename='uploads/shop/' ~ img) }}" class="card-img-top" alt="{{ p.name }}" style="height: 120px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body py-2">
+                            <div class="small fw-semibold">{{ p.name }}</div>
+                            <div class="small text-primary">{{ '%g'|format(p.price) }} {{ p.currency or 'RWF' }}</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .shop-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important; transition: all 0.3s ease; }
+    .gallery-thumb { border: 2px solid transparent; }
+    .gallery-thumb.active, .gallery-thumb:hover { border-color: var(--bs-primary); }
+</style>
+
+<script>
+    // Galerie : clic sur miniature
+    document.querySelectorAll('.gallery-thumb').forEach(function (thumb) {
+        thumb.addEventListener('click', function () {
+            document.getElementById('galleryMain').src = thumb.src;
+            document.querySelectorAll('.gallery-thumb').forEach(function (t) { t.classList.remove('active'); });
+            thumb.classList.add('active');
+        });
+    });
+</script>
+{% endblock %}
