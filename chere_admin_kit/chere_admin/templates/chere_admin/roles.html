@@ -1,0 +1,9 @@
+{% extends "chere_admin/base.html" %}{% block title %}Rôles{% endblock %}{% block body %}
+<h1>Matrice des permissions</h1>
+{% for r in roles %}<form method="post" action="{{ url_for('chere_admin.role_permissions', rid=r.id) }}" class="card" data-confirm="Enregistrer les permissions de {{ r.name }} ?">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+<h2>{{ r.name }} {% if not r.is_active %}<span class="badge failed">désactivé</span>{% endif %}</h2>
+<div class="scroll">{% for p in perms %}<label style="margin-right:.8rem"><input type="checkbox" name="codes" value="{{ p }}" {{ 'checked' if p in matrix[r.id] }} {{ 'disabled' if r.slug=='super_admin' or not has_perm('roles.manage') }}> {{ p }}</label> {% endfor %}</div>
+{% if has_perm('roles.manage') and r.slug!='super_admin' %}<button>Enregistrer</button>{% endif %}</form>
+{% if has_perm('roles.manage') and r.slug!='super_admin' %}<form method="post" action="{{ url_for('chere_admin.role_toggle', rid=r.id) }}" data-confirm="Activer/désactiver ce rôle ?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes"><button class="danger">{{ 'Désactiver' if r.is_active else 'Activer' }} {{ r.name }}</button></form>{% endif %}{% endfor %}
+{% if has_perm('roles.manage') %}<form method="post" class="card"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="name" placeholder="Nouveau rôle" required aria-label="Nom du rôle"><input name="description" placeholder="Description"><button>Créer</button></form>{% endif %}{% endblock %}

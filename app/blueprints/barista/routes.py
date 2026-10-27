@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash, session
+from flask import render_template, request, jsonify, redirect, url_for, flash, session, Response
 from flask_login import login_required, current_user
 from app.blueprints.barista import barista_bp
 from app.models import (
@@ -7,6 +7,7 @@ from app.models import (
 )
 from app.extensions import db
 from app.services.momo_service import momo_service
+from app.services.qr_service import generate_qr_png_bytes
 from datetime import datetime
 import uuid
 
@@ -48,6 +49,21 @@ def get_menu():
             "icon": item.icon,
         })
     return jsonify({"success": True, "categories": categories})
+
+
+@barista_bp.route("/qrcode.png")
+def qr_code():
+    """Generate a QR code pointing to the Barista ordering page."""
+    try:
+        size = max(128, min(1024, request.args.get("size", 320, type=int)))
+    except (ValueError, TypeError):
+        size = 320
+
+    public_url = url_for("barista.index", _external=True)
+    png_bytes = generate_qr_png_bytes(public_url, size=size)
+    resp = Response(png_bytes, mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 @barista_bp.route("/order", methods=["POST"])

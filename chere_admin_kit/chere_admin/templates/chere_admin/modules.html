@@ -1,0 +1,5 @@
+{% extends "chere_admin/base.html" %}{% block title %}Modules{% endblock %}{% block body %}
+<h1>Modules</h1><div class="card scroll"><table><tr><th>Module</th><th>État</th><th></th></tr>
+{% for m in items %}<tr><td>{{ m.label }}</td><td class="{{ 'active' if m.enabled else 'suspended' }}">{{ 'activé' if m.enabled else 'désactivé' }}</td><td>
+{% if has_perm('modules.manage') %}<form method="post" action="{{ url_for('chere_admin.module_toggle', name=m.name) }}" data-confirm="Changer l'état de ce module ?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes"><button>Basculer</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="3">Aucun module enregistré (voir README).</td></tr>{% endfor %}</table></div>{% endblock %}

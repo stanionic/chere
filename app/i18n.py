@@ -97,6 +97,7 @@ TRANSLATIONS = {
         "navbar.toggle_theme": "Basculer le theme",
         "navbar.eval": "Évaluations",
         "navbar.shop": "Boutique",
+        "navbar.admin": "Administration",
         "navbar.explore": "Explore CHERE",
         "footer.company_copy": (
             "Community • Humanity • Empowerment • Resources • Environment."
@@ -549,6 +550,7 @@ TRANSLATIONS = {
         "navbar.toggle_theme": "Toggle theme",
         "navbar.eval": "Evaluations",
         "navbar.shop": "Shop",
+        "navbar.admin": "Admin",
         "navbar.explore": "Explore CHERE",
         "footer.company_copy": (
             "Community • Humanity • Empowerment • Resources • Environment."

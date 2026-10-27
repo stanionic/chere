@@ -1,3 +1,334 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================================
+   Le Carnet — Design system
+   Charte : crème / encre / brique — typo Fraunces / Inter / Mono
+   ========================================================= */
+
+:root {
+  --lc-cream: #f1eee4;
+  --lc-cream-deep: #e7e2d3;
+  --lc-ink: #1c2b4a;
+  --lc-brick: #b4402a;
+  --lc-brick-dark: #9c3423;
+  --lc-green: #456653;
+  --lc-line: rgba(28, 43, 74, 0.14);
+  --lc-shadow: 0 10px 30px rgba(28, 43, 74, 0.08);
+  --lc-shadow-lg: 0 24px 60px rgba(28, 43, 74, 0.16);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Base ---------- */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  background: var(--lc-cream);
+  color: var(--lc-ink);
+}
+
+::selection {
+  background: rgba(180, 64, 42, 0.18);
+  color: var(--lc-ink);
+}
+
+/* ---------- Scrollbar douce ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(28, 43, 74, 0.28) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(28, 43, 74, 0.22);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(28, 43, 74, 0.4);
+  background-clip: content-box;
+}
+
+/* ---------- Polices utilitaires ---------- */
+.font-display {
+  font-family: "Fraunces", Georgia, serif;
+}
+.font-body {
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* ---------- Animations d'entrée (style app React) ---------- */
+@keyframes lc-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes lc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lc-pop {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.lc-anim-up { animation: lc-fade-up 0.55s var(--ease) both; }
+.lc-anim-in { animation: lc-fade-in 0.5s var(--ease) both; }
+.lc-anim-pop { animation: lc-pop 0.4s var(--ease) both; }
+
+/* ---------- Surfaces ---------- */
+.lc-card {
+  background: #fff;
+  border: 1px solid var(--lc-line);
+  border-radius: 8px;
+  box-shadow: var(--lc-shadow);
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+.lc-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--lc-shadow-lg);
+}
+
+/* ---------- Champs de formulaire ---------- */
+.lc-field {
+  font-family: "DM Sans", system-ui, sans-serif;
+  width: 100%;
+  background: #fff;
+  color: var(--lc-ink);
+  border: 1px solid rgba(28, 43, 74, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.lc-field::placeholder { color: rgba(28, 43, 74, 0.4); }
+.lc-field:focus {
+  outline: none;
+  border-color: var(--lc-brick);
+  box-shadow: 0 0 0 3px rgba(180, 64, 42, 0.22);
+}
+select.lc-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%231C2B4A' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2.2rem;
+}
+
+/* ---------- Radio & checkbox personnalisés ---------- */
+.lc-radio,
+.lc-checkbox {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid rgba(28, 43, 74, 0.4);
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.lc-radio { border-radius: 999px; }
+.lc-checkbox { border-radius: 0.3rem; }
+.lc-radio::before,
+.lc-checkbox::before {
+  content: "";
+  transform: scale(0);
+  transition: transform 0.18s var(--ease);
+}
+.lc-radio::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--lc-brick);
+  box-shadow: 0 0 0 3px #fff inset;
+}
+.lc-checkbox::before {
+  width: 0.6rem;
+  height: 0.6rem;
+  background: var(--lc-brick);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.lc-radio:checked,
+.lc-checkbox:checked { border-color: var(--lc-brick); }
+.lc-radio:checked::before,
+.lc-checkbox:checked::before { transform: scale(1); }
+.lc-radio:focus-visible,
+.lc-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(180, 64, 42, 0.28);
+}
+.lc-radio:disabled,
+.lc-checkbox:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ---------- Boutons ---------- */
+.lc-btn {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.lc-btn:active { transform: translateY(1px) scale(0.99); }
+.lc-btn-primary {
+  background: var(--lc-brick);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(180, 64, 42, 0.28);
+}
+.lc-btn-primary:hover {
+  background: var(--lc-brick-dark);
+  box-shadow: 0 12px 28px rgba(180, 64, 42, 0.34);
+}
+
+/* ---------- Header en verre ---------- */
+.lc-header {
+  background: linear-gradient(110deg, #1c2b4a 0%, #29443f 100%);
+  border-bottom: 1px solid rgba(241, 238, 228, 0.14);
+  box-shadow: 0 12px 40px rgba(11, 20, 40, 0.28);
+}
+
+.lc-shell {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 47px,
+    rgba(28, 43, 74, 0.035) 48px
+  );
+}
+
+.lc-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  padding: 0 0 1.75rem;
+  border-bottom: 1px solid var(--lc-line);
+}
+
+.lc-intro-kicker {
+  margin: 0 0 0.85rem;
+  color: var(--lc-green);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.lc-intro-kicker span {
+  margin: 0 0.35rem;
+  color: var(--lc-brick);
+}
+
+.lc-intro-title {
+  max-width: 40rem;
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.08;
+}
+
+.lc-intro-copy {
+  max-width: 38rem;
+  margin: 0.75rem 0 0;
+  color: rgba(28, 43, 74, 0.68);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.lc-intro-stats {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 1.5rem;
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  border-left: 2px solid var(--lc-brick);
+}
+
+.lc-intro-stats div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.lc-intro-stats strong {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.lc-intro-stats span {
+  color: rgba(28, 43, 74, 0.58);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.lc-mode-button:focus-visible,
+.lc-btn:focus-visible {
+  outline: 3px solid #e4a17d;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .lc-header > div {
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .lc-mode-toggle {
+    width: 100%;
+  }
+
+  .lc-mode-button {
+    flex: 1;
+    justify-content: center;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .lc-main {
+    padding-top: 2rem;
+  }
+
+  .lc-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .lc-intro-stats {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+/* ---------- Accessibilité : mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

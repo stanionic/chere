@@ -1,0 +1,16 @@
+{% extends "chere_admin/base.html" %}{% block title %}Utilisateur {{ u.id }}{% endblock %}{% block body %}
+<h1>{{ u.username }} <span class="badge {{ u.status }}">{{ u.status }}</span></h1>
+<div class="card"><p>Rôles: {% for r in roles %}<span class="badge">{{ r.name }}</span> {% else %}aucun{% endfor %}</p>
+<p>Permissions effectives: {{ effective|join(', ') or 'aucune' }}</p></div>
+{% if has_perm('users.suspend') %}<form method="post" action="{{ url_for('chere_admin.user_status', uid=u.id) }}" class="card" data-confirm="Changer le statut de ce compte ?">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+<select name="status" aria-label="Nouveau statut">{% for s in STATUSES %}<option {{ 'selected' if s==u.status }}>{{ s }}</option>{% endfor %}</select><button class="danger">Appliquer</button></form>{% endif %}
+{% if has_perm('roles.assign') %}<form method="post" action="{{ url_for('chere_admin.user_set_roles', uid=u.id) }}" class="card" data-confirm="Modifier les rôles ?">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+{% set have = roles|map(attribute='id')|list %}{% for r in all_roles %}<label><input type="checkbox" name="role_ids" value="{{ r.id }}" {{ 'checked' if r.id in have }}> {{ r.name }}</label> {% endfor %}<button>Enregistrer les rôles</button></form>{% endif %}
+{% if has_perm('permissions.manage') %}<form method="post" action="{{ url_for('chere_admin.user_override', uid=u.id) }}" class="card" data-confirm="Modifier cette permission ?">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+<select name="permission" aria-label="Permission">{% for p in PERMISSIONS %}<option>{{ p }}</option>{% endfor %}</select>
+<select name="mode" aria-label="Mode"><option>grant</option><option>deny</option><option>clear</option></select><button>Appliquer</button>
+<p>Exceptions: {% for o in overrides %}<span class="badge">{{ o.permission.code }}: {{ 'accordée' if o.granted else 'refusée' }}</span> {% else %}aucune{% endfor %}</p></form>{% endif %}
+<div class="card scroll"><h2>Activité</h2><table>{% for l in logs %}<tr><td>{{ l.ts }}</td><td>{{ l.action }}</td><td class="{{ l.outcome }}">{{ l.outcome }}</td></tr>{% endfor %}</table></div>{% endblock %}

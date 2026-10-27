@@ -20,6 +20,11 @@
         <li class="nav-item"><a class="nav-link" href="{{ url_for('blog.index') }}">{{ t('navbar.blog') }}</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.index') }}">{{ t('navbar.contact') }}</a></li>
         {% if current_user.is_authenticated %}
+        {% if current_user.has_role('admin') %}
+        <li class="nav-item">
+          <a class="nav-link fw-semibold" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-shield-lock me-1"></i>{{ t('navbar.admin') }}</a>
+        </li>
+        {% endif %}
         <li class="nav-item ms-lg-2">
           <a class="nav-link position-relative" href="{{ url_for('home.notifications') }}" aria-label="{{ t('navbar.notifications') }}">
             <i class="bi bi-bell-fill"></i>

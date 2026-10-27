@@ -1,0 +1,65 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="card-glass p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1">Transactions MoMo</h3>
+      <p class="text-muted mb-0">Historique complet des paiements passés sur le système MoMo de l’application.</p>
+    </div>
+  </div>
+
+  {% if transactions %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Numéro</th>
+            <th>Statut</th>
+            <th>Référence</th>
+            <th>Type</th>
+            <th>Événement</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+          <tr>
+            <td>#{{ tx.id }}</td>
+            <td>{{ tx.created_at.strftime('%d/%m/%Y %H:%M') if tx.created_at else '—' }}</td>
+            <td><strong>{{ '%.0f'|format(tx.amount or 0) }} RWF</strong></td>
+            <td>{{ tx.phone_number or '—' }}</td>
+            <td>
+              {% if tx.status == 'success' %}
+                <span class="badge bg-success">Réussi</span>
+              {% elif tx.status == 'pending' %}
+                <span class="badge bg-warning text-dark">En attente</span>
+              {% elif tx.status == 'failed' %}
+                <span class="badge bg-danger">Échoué</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ tx.status or 'Inconnu' }}</span>
+              {% endif %}
+            </td>
+            <td>{{ tx.momo_reference or '—' }}</td>
+            <td>{{ tx.payment_method or 'momo' }}</td>
+            <td>
+              {% if tx.event %}
+                {{ tx.event.title }}
+              {% elif tx.participant and tx.participant.event %}
+                {{ tx.participant.event.title }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info mb-0">Aucune transaction MoMo n’a été enregistrée pour le moment.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "chere_admin/base.html" %}{% block title %}WhatsApp{% endblock %}{% block body %}
+<h1>Notifications WhatsApp (CallMeBot)</h1>
+<div class="card">Identifiants serveur: <b class="{{ 'active' if configured else 'failed' }}">{{ 'configurés' if configured else 'non configurés (voir .env.example)' }}</b></div>
+{% if has_perm('notifications.manage') %}<form method="post" action="{{ url_for('chere_admin.notification_settings') }}" class="card" data-confirm="Enregistrer ces réglages ?">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes">
+<label><input type="checkbox" name="enabled" {{ 'checked' if master }}> Notifications activées</label><br>
+{% for e,on in events.items() %}<label style="margin-right:1rem"><input type="checkbox" name="events" value="{{ e }}" {{ 'checked' if on }}> {{ e }}</label>{% endfor %}<br>
+Gravité minimale <select name="min_severity">{% for s in severities %}<option {{ 'selected' if s==min_sev }}>{{ s }}</option>{% endfor %}</select>
+Limite/heure <input type="number" name="rate" value="{{ rate }}" min="1" max="200" style="width:5rem"><button>Enregistrer</button></form>
+<form method="post" action="{{ url_for('chere_admin.notification_test') }}" class="card" data-confirm="Envoyer un vrai message WhatsApp de test ?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="confirm" value="yes"><button>Envoyer un message de test</button></form>{% endif %}
+<div class="card scroll"><h2>Historique</h2><table><tr><th>Date</th><th>Événement</th><th>Gravité</th><th>Statut</th><th>Essais</th><th>Erreur</th><th></th></tr>
+{% for n in page.items %}<tr><td>{{ n.ts }}</td><td>{{ n.event }}</td><td>{{ n.severity }}</td><td class="{{ n.status }}">{{ n.status }}</td><td>{{ n.attempts }}</td><td>{{ n.error }}</td><td>
+{% if n.status=='failed' and has_perm('notifications.manage') %}<form method="post" action="{{ url_for('chere_admin.notification_retry', nid=n.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>Réessayer</button></form>{% endif %}</td></tr>{% endfor %}</table></div>{% endblock %}

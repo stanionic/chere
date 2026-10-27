@@ -1,0 +1,8 @@
+{% extends "chere_admin/base.html" %}{% block title %}Dashboard{% endblock %}{% block body %}
+<h1>Tableau de bord</h1>
+<div class="grid">{% for k,l in [('total','Utilisateurs'),('active','Actifs'),('pending','En attente'),('suspended','Suspendus'),('admins','Administrateurs')] %}
+<div class="card stat"><b>{{ stats[k] }}</b>{{ l }}</div>{% endfor %}
+<div class="card stat"><b>{{ failed }}</b>Notifications échouées</div></div>
+<div class="card"><h2>Événements récents</h2><div class="scroll"><table><tr><th>Date</th><th>Acteur</th><th>Action</th><th>Cible</th><th>Résultat</th></tr>
+{% for e in events %}<tr><td>{{ e.ts }}</td><td>{{ e.actor_id }}</td><td>{{ e.action }}</td><td>{{ e.target }}</td><td class="{{ e.outcome }}">{{ e.outcome }}</td></tr>
+{% else %}<tr><td colspan="5">Aucun événement.</td></tr>{% endfor %}</table></div></div>{% endblock %}

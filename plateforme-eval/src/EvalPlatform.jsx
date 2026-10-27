@@ -178,16 +178,9 @@ export default function EvalPlatform() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1EEE4] text-[#1C2B4A]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-        .font-display { font-family: 'Fraunces', serif; }
-        .font-body { font-family: 'Inter', sans-serif; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-      `}</style>
-
+    <div className="lc-shell min-h-screen bg-[#F1EEE4] text-[#1C2B4A]">
       {/* Header */}
-      <header className="border-b-2 border-[#1C2B4A]/15 bg-[#1C2B4A] text-[#F1EEE4]">
+      <header className="lc-header text-[#F1EEE4] lc-anim-in sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BookOpen size={22} strokeWidth={1.75} />
@@ -198,18 +191,20 @@ export default function EvalPlatform() {
               </p>
             </div>
           </div>
-          <nav className="flex gap-1 bg-[#F1EEE4]/10 rounded-full p-1">
+          <nav aria-label="Mode de l'application" className="lc-mode-toggle flex gap-1 bg-[#F1EEE4]/10 rounded-full p-1">
             <button
+              aria-pressed={mode === "enseignant"}
               onClick={() => setMode("enseignant")}
-              className={`font-body text-sm px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
+              className={`lc-mode-button font-body text-sm px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
                 mode === "enseignant" ? "bg-[#F1EEE4] text-[#1C2B4A]" : "text-[#F1EEE4]/80 hover:text-[#F1EEE4]"
               }`}
             >
               <PenLine size={14} /> Enseignant
             </button>
             <button
+              aria-pressed={mode === "etudiant"}
               onClick={() => setMode("etudiant")}
-              className={`font-body text-sm px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
+              className={`lc-mode-button font-body text-sm px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 ${
                 mode === "etudiant" ? "bg-[#F1EEE4] text-[#1C2B4A]" : "text-[#F1EEE4]/80 hover:text-[#F1EEE4]"
               }`}
             >
@@ -219,7 +214,24 @@ export default function EvalPlatform() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="lc-main max-w-5xl mx-auto px-6 py-10 lc-anim-up">
+        <section className="lc-intro" aria-live="polite">
+          <div>
+            <p className="lc-intro-kicker">LE CARNET <span>/</span> {mode === "enseignant" ? "ESPACE ENSEIGNANT" : "ESPACE ÉTUDIANT"}</p>
+            <h2 className="lc-intro-title">
+              {mode === "enseignant" ? "Composez votre évaluation." : "Prenez le temps de réfléchir."}
+            </h2>
+            <p className="lc-intro-copy">
+              {mode === "enseignant"
+                ? "Créez vos questions, définissez le barème et vérifiez le questionnaire en un coup d’œil."
+                : "Répondez aux questions à votre rythme. Votre résultat s’affichera après la soumission."}
+            </p>
+          </div>
+          <div className="lc-intro-stats" aria-label={`${questions.length} questions, ${totalPoints} points au total`}>
+            <div><strong>{String(questions.length).padStart(2, "0")}</strong><span>questions</span></div>
+            <div><strong>{totalPoints}</strong><span>points</span></div>
+          </div>
+        </section>
         {mode === "enseignant" ? (
           <TeacherView questions={questions} onAdd={addQuestion} onRemove={removeQuestion} totalPoints={totalPoints} />
         ) : (
@@ -318,7 +330,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="mt-1 w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#B4402A]/40"
+              className="mt-1 lc-field"
             >
               <option value="qcm_unique">QCM — choix unique</option>
               <option value="qcm_multiple">QCM — choix multiple</option>
@@ -335,7 +347,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
               onChange={(e) => setStatement(e.target.value)}
               rows={2}
               placeholder="Rédigez la question…"
-              className="mt-1 w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#B4402A]/40"
+              className="mt-1 lc-field resize-y"
             />
           </div>
 
@@ -349,6 +361,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
                   <input
                     type={type === "qcm_unique" ? "radio" : "checkbox"}
                     name="correct-option"
+                    className={type === "qcm_unique" ? "lc-radio" : "lc-checkbox"}
                     checked={type === "qcm_unique" ? correctOptionId === o.id : correctOptionIds.includes(o.id)}
                     onChange={() =>
                       type === "qcm_unique" ? setCorrectOptionId(o.id) : toggleMultiCorrect(o.id)
@@ -358,7 +371,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
                     value={o.text}
                     onChange={(e) => updateOption(o.id, e.target.value)}
                     placeholder={`Option ${o.id.toUpperCase()}`}
-                    className="flex-1 font-body border border-[#1C2B4A]/25 rounded-md px-3 py-1.5 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#B4402A]/40"
+                    className="flex-1 lc-field text-sm py-1.5"
                   />
                   <button type="button" onClick={() => removeOption(o.id)} className="text-[#1C2B4A]/40 hover:text-[#B4402A]">
                     <Trash2 size={16} />
@@ -410,7 +423,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
                 value={acceptedRaw}
                 onChange={(e) => setAcceptedRaw(e.target.value)}
                 placeholder="ex : mitochondrie, la mitochondrie"
-                className="mt-1 w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#B4402A]/40"
+                className="mt-1 lc-field text-sm"
               />
             </div>
           )}
@@ -423,7 +436,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
                   type="number"
                   value={numericValue}
                   onChange={(e) => setNumericValue(e.target.value)}
-                  className="mt-1 w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white text-sm"
+                  className="mt-1 lc-field text-sm"
                 />
               </div>
               <div>
@@ -432,7 +445,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
                   type="number"
                   value={tolerance}
                   onChange={(e) => setTolerance(e.target.value)}
-                  className="mt-1 w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white text-sm"
+                  className="mt-1 lc-field text-sm"
                 />
               </div>
             </div>
@@ -446,13 +459,13 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
               step="0.5"
               value={points}
               onChange={(e) => setPoints(e.target.value)}
-              className="mt-1 w-28 font-mono border border-[#1C2B4A]/25 rounded-md px-3 py-2 bg-white text-sm"
+              className="mt-1 w-28 lc-field font-mono text-sm"
             />
           </div>
 
           <button
             type="submit"
-            className="font-body text-sm bg-[#B4402A] text-white px-5 py-2.5 rounded-md hover:bg-[#9c3423] transition-colors flex items-center gap-2"
+            className="lc-btn lc-btn-primary text-sm"
           >
             <Plus size={16} /> Ajouter la question
           </button>
@@ -470,7 +483,7 @@ function TeacherView({ questions, onAdd, onRemove, totalPoints }) {
             <p className="font-body text-sm text-[#1C2B4A]/50 italic">Aucune question pour l'instant.</p>
           )}
           {questions.map((q, i) => (
-            <div key={q.id} className="bg-white border border-[#1C2B4A]/12 rounded-lg p-4 shadow-sm">
+            <div key={q.id} className="lc-card lc-card-hover lc-anim-up p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -544,7 +557,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
           return (
             <div
               key={q.id}
-              className="bg-white border border-[#1C2B4A]/12 rounded-lg p-5 shadow-sm flex items-start gap-4"
+              className="lc-card lc-card-hover lc-anim-up p-5 flex items-start gap-4"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
@@ -560,6 +573,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
                         type="radio"
                         name={q.id}
                         disabled={graded}
+                        className="lc-radio"
                         checked={answers[q.id] === o.id}
                         onChange={() => setAnswer(q.id, o.id)}
                       />
@@ -573,6 +587,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
                       <input
                         type="checkbox"
                         disabled={graded}
+                        className="lc-checkbox"
                         checked={(answers[q.id] || []).includes(o.id)}
                         onChange={() => toggleMulti(q.id, o.id)}
                       />
@@ -604,7 +619,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
                     value={answers[q.id] || ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
                     placeholder="Votre réponse…"
-                    className="w-full font-body border border-[#1C2B4A]/25 rounded-md px-3 py-1.5 text-sm"
+                    className="lc-field text-sm"
                   />
                 )}
 
@@ -615,7 +630,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
                     value={answers[q.id] || ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
                     placeholder="Votre réponse…"
-                    className="w-40 font-mono border border-[#1C2B4A]/25 rounded-md px-3 py-1.5 text-sm"
+                    className="w-40 lc-field font-mono text-sm"
                   />
                 )}
               </div>
@@ -628,7 +643,7 @@ function StudentView({ questions, answers, setAnswers, graded, setGraded, totalP
       {!graded && (
         <button
           onClick={() => setGraded(true)}
-          className="mt-6 font-body text-sm bg-[#B4402A] text-white px-5 py-2.5 rounded-md hover:bg-[#9c3423] transition-colors flex items-center gap-2"
+          className="mt-6 lc-btn lc-btn-primary text-sm"
         >
           <Send size={16} /> Soumettre et corriger
         </button>

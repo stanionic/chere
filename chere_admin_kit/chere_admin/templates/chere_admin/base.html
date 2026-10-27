@@ -1,0 +1,29 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CHERE Admin — {% block title %}{% endblock %}</title>
+<style>
+:root{--bg:#f5f6f8;--fg:#1c2230;--card:#fff;--bd:#dde1e8;--ac:#1f6feb;--bad:#c62828;--ok:#2e7d32;--warn:#b26a00}
+@media(prefers-color-scheme:dark){:root{--bg:#12151c;--fg:#e8ebf2;--card:#1b2030;--bd:#2c3347}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+nav{display:flex;flex-wrap:wrap;gap:.25rem;padding:.6rem 1rem;background:var(--card);border-bottom:1px solid var(--bd)}
+nav a{padding:.35rem .7rem;border-radius:6px;color:var(--fg);text-decoration:none}nav a:hover{background:var(--bg)}
+main{max-width:1100px;margin:1rem auto;padding:0 1rem}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem}.stat b{font-size:1.8rem;display:block}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{padding:.45rem .6rem;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.badge{padding:.1rem .5rem;border-radius:99px;border:1px solid var(--bd);font-size:.8rem}.sent,.success,.active{color:var(--ok)}.failed,.failure,.suspended{color:var(--bad)}
+button,input,select{font:inherit;padding:.35rem .6rem;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--fg)}
+button{background:var(--ac);color:#fff;border-color:var(--ac);cursor:pointer}button.danger{background:var(--bad);border-color:var(--bad)}
+.flash{background:#e8f1ff;color:#0b3d91;padding:.5rem 1rem;border-radius:8px;margin-bottom:1rem}
+</style></head><body>
+<nav aria-label="Admin">
+{% if has_perm('dashboard.view') %}<a href="{{ url_for('chere_admin.dashboard') }}">Dashboard</a>{% endif %}
+{% if has_perm('users.view') %}<a href="{{ url_for('chere_admin.users') }}">Utilisateurs</a>{% endif %}
+{% if has_perm('roles.view') %}<a href="{{ url_for('chere_admin.roles') }}">Rôles &amp; permissions</a>{% endif %}
+{% if has_perm('modules.view') %}<a href="{{ url_for('chere_admin.modules') }}">Modules</a>{% endif %}
+{% if has_perm('audit_logs.view') %}<a href="{{ url_for('chere_admin.audit_logs') }}">Audit</a>{% endif %}
+{% if has_perm('notifications.view') %}<a href="{{ url_for('chere_admin.notifications') }}">WhatsApp</a>{% endif %}
+</nav><main>
+{% for m in get_flashed_messages() %}<div class="flash" role="status">{{ m }}</div>{% endfor %}
+{% block body %}{% endblock %}</main>
+<script>document.addEventListener('submit',e=>{const m=e.target.dataset.confirm;if(m&&!confirm(m))e.preventDefault()});</script>
+</body></html>

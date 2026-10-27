@@ -1,0 +1,7 @@
+{% extends "chere_admin/base.html" %}{% block title %}Utilisateurs{% endblock %}{% block body %}
+<h1>Utilisateurs</h1>
+<form method="get" class="card"><input name="q" value="{{ q }}" placeholder="Recherche" aria-label="Recherche">
+<select name="status" aria-label="Statut"><option value="">Tous</option>{% for s in STATUSES %}<option {{ 'selected' if s==status }}>{{ s }}</option>{% endfor %}</select><button>Filtrer</button></form>
+<div class="card scroll"><table><tr>{% for c in ['id','username','email','status','created_at'] %}<th><a href="?sort={{ c }}&q={{ q }}&status={{ status }}">{{ c }}</a></th>{% endfor %}</tr>
+{% for u in page.items %}<tr><td><a href="{{ url_for('chere_admin.user_detail', uid=u.id) }}">{{ u.id }}</a></td><td>{{ u.username }}</td><td>{{ u.email }}</td><td class="{{ u.status }}">{{ u.status }}</td><td>{{ u.created_at }}</td></tr>{% endfor %}</table></div>
+<p>Page {{ page.page }}/{{ page.pages or 1 }} {% if page.has_prev %}<a href="?page={{ page.prev_num }}&q={{ q }}&status={{ status }}">‹ Préc.</a>{% endif %} {% if page.has_next %}<a href="?page={{ page.next_num }}&q={{ q }}&status={{ status }}">Suiv. ›</a>{% endif %}</p>{% endblock %}
