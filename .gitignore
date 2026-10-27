@@ -11,6 +11,9 @@ app/static/uploads/*
 # Scripts / logs temporaires
 _*.py
 _*.txt
+*.log
+cm2.txt2
+server_startup.log
 
 # Données hors modules Flask
 barista/images/
