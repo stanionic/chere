@@ -10,6 +10,7 @@ app/static/uploads/*
 
 # Scripts / logs temporaires
 _*.py
+!**/__init__.py
 _*.txt
 *.log
 cm2.txt2
