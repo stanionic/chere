@@ -9,20 +9,20 @@
     </button>
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('about.index') }}">{{ t('navbar.about') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('innovation.index') }}">{{ t('navbar.innovation') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('renewable.index') }}">{{ t('navbar.energy') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('humanitarian.index') }}">{{ t('navbar.humanitarian') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('projects.index') }}">{{ t('navbar.projects') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('events.index') }}">{{ t('navbar.events') }}</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-shop {% if request.blueprint == 'shop' %}active{% endif %}" href="{{ url_for('shop.index') }}"><i class="bi bi-bag-fill me-1"></i>{{ t('navbar.shop') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('eval.index') }}">{{ t('navbar.eval') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('blog.index') }}">{{ t('navbar.blog') }}</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.index') }}">{{ t('navbar.contact') }}</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('about.index') }}" title="{{ t('navbar.about') }}">ℹ️</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('innovation.index') }}" title="{{ t('navbar.innovation') }}">💡</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('renewable.index') }}" title="{{ t('navbar.energy') }}">⚡</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('humanitarian.index') }}" title="{{ t('navbar.humanitarian') }}">🤝</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('projects.index') }}" title="{{ t('navbar.projects') }}">🚀</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('events.index') }}" title="{{ t('navbar.events') }}">📅</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-shop {% if request.blueprint == 'shop' %}active{% endif %}" href="{{ url_for('shop.index') }}" title="{{ t('navbar.shop') }}">🛍️</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('eval.index') }}" title="{{ t('navbar.eval') }}">📊</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('blog.index') }}" title="{{ t('navbar.blog') }}">📰</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.index') }}" title="{{ t('navbar.contact') }}">✉️</a></li>
         {% if current_user.is_authenticated %}
         {% if current_user.has_role('admin') %}
         <li class="nav-item">
-          <a class="nav-link fw-semibold" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-shield-lock me-1"></i>{{ t('navbar.admin') }}</a>
+          <a class="nav-link fw-semibold" href="{{ url_for('admin.dashboard') }}" title="{{ t('navbar.admin') }}">🛡️</a>
         </li>
         {% endif %}
         <li class="nav-item ms-lg-2">
