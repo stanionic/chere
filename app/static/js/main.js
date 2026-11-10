@@ -6,6 +6,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   initThemeToggle();
   initNavbarScroll();
+  initMobileMenu();
   initCounters();
   initWorldMap();
 });
@@ -28,20 +29,69 @@ function initThemeToggle() {
       updateToggleIcon(next);
     });
   }
+
+  const themeToggleMobile = document.getElementById("theme-toggle-mobile");
+  if (themeToggleMobile) {
+    themeToggleMobile.addEventListener("click", () => {
+      const current = root.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("chere-theme", next);
+      updateToggleIcon(next);
+    });
+  }
 }
 
 function updateToggleIcon(theme) {
-  const icon = document.querySelector("#theme-toggle i");
-  if (!icon) return;
-  icon.className = theme === "dark" ? "bi bi-sun-fill" : "bi bi-moon-stars-fill";
+  const iconDesktop = document.querySelector("#theme-toggle i");
+  const iconMobile = document.querySelector("#theme-toggle-mobile i");
+  const cls = theme === "dark" ? "bi bi-sun-fill" : "bi bi-moon-stars-fill";
+  if (iconDesktop) iconDesktop.className = cls;
+  if (iconMobile) iconMobile.className = cls;
 }
 
 /* ---------- Navbar au scroll ---------- */
 function initNavbarScroll() {
-  const nav = document.querySelector(".navbar-chere");
+  const nav = document.querySelector(".navbar-modern");
   if (!nav) return;
   window.addEventListener("scroll", () => {
     nav.classList.toggle("shadow-chere", window.scrollY > 20);
+  });
+}
+
+/* ---------- Menu mobile hamburger ---------- */
+function initMobileMenu() {
+  const toggleBtn = document.getElementById("navMobileToggle");
+  const closeBtn = document.getElementById("navMobileClose");
+  const overlay = document.getElementById("navMobileOverlay");
+  const mobileLinks = document.querySelectorAll(".nav-mobile-link");
+  const html = document.documentElement;
+
+  if (!toggleBtn || !closeBtn || !overlay) return;
+
+  const openMenu = () => {
+    overlay.classList.add("open");
+    toggleBtn.setAttribute("aria-expanded", "true");
+    html.style.overflow = "hidden";
+  };
+
+  const closeMenu = () => {
+    overlay.classList.remove("open");
+    toggleBtn.setAttribute("aria-expanded", "false");
+    html.style.overflow = "";
+  };
+
+  toggleBtn.addEventListener("click", openMenu);
+  closeBtn.addEventListener("click", closeMenu);
+
+  // Fermer en cliquant sur un lien
+  mobileLinks.forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
+
+  // Fermer en cliquant sur le fond (overlay)
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeMenu();
   });
 }
 

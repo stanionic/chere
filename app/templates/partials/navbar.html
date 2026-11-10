@@ -1,49 +1,75 @@
-<nav class="navbar navbar-expand-lg navbar-chere fixed-top py-3">
+﻿<nav class="navbar-modern fixed-top" id="mainNavbar">
   <div class="container">
-    <a class="navbar-brand navbar-brand-chere d-flex align-items-center" href="{{ url_for('home.index') }}">
-      <img src="{{ url_for('static', filename='img/logo-nav.png') }}" alt="CHERE" class="navbar-logo me-2">
-      <span>CHERE</span>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('home.index') }}" aria-label="CHERE Accueil">
+      <img src="{{ url_for('static', filename='img/logo-nav.png') }}" alt="CHERE" class="navbar-logo">
+      <span class="brand-text">CHERE</span>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNav">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('about.index') }}" title="{{ t('navbar.about') }}">ℹ️</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('innovation.index') }}" title="{{ t('navbar.innovation') }}">💡</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('renewable.index') }}" title="{{ t('navbar.energy') }}">⚡</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('humanitarian.index') }}" title="{{ t('navbar.humanitarian') }}">🤝</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('projects.index') }}" title="{{ t('navbar.projects') }}">🚀</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('events.index') }}" title="{{ t('navbar.events') }}">📅</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-shop {% if request.blueprint == 'shop' %}active{% endif %}" href="{{ url_for('shop.index') }}" title="{{ t('navbar.shop') }}">🛍️</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('eval.index') }}" title="{{ t('navbar.eval') }}">📊</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('blog.index') }}" title="{{ t('navbar.blog') }}">📰</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact.index') }}" title="{{ t('navbar.contact') }}">✉️</a></li>
-        {% if current_user.is_authenticated %}
+
+    <ul class="nav-links d-none d-lg-flex align-items-center">
+      <li><a class="nav-link {% if request.blueprint == 'about' %}active{% endif %}" href="{{ url_for('about.index') }}" title="{{ t('navbar.about') }}"><i class="bi bi-info-circle"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'innovation' %}active{% endif %}" href="{{ url_for('innovation.index') }}" title="{{ t('navbar.innovation') }}"><i class="bi bi-lightbulb"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'renewable' %}active{% endif %}" href="{{ url_for('renewable.index') }}" title="{{ t('navbar.energy') }}"><i class="bi bi-lightning-charge"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'humanitarian' %}active{% endif %}" href="{{ url_for('humanitarian.index') }}" title="{{ t('navbar.humanitarian') }}"><i class="bi bi-hand-heart"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'projects' %}active{% endif %}" href="{{ url_for('projects.index') }}" title="{{ t('navbar.projects') }}"><i class="bi bi-rocket-takeoff"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'events' %}active{% endif %}" href="{{ url_for('events.index') }}" title="{{ t('navbar.events') }}"><i class="bi bi-calendar-event"></i></a></li>
+      <li><a class="nav-link nav-link-shop {% if request.blueprint == 'shop' %}active{% endif %}" href="{{ url_for('shop.index') }}" title="{{ t('navbar.shop') }}"><i class="bi bi-shop"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'eval' %}active{% endif %}" href="{{ url_for('eval.index') }}" title="{{ t('navbar.eval') }}"><i class="bi bi-bar-chart"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'blog' %}active{% endif %}" href="{{ url_for('blog.index') }}" title="{{ t('navbar.blog') }}"><i class="bi bi-journal-text"></i></a></li>
+      <li><a class="nav-link {% if request.blueprint == 'contact' %}active{% endif %}" href="{{ url_for('contact.index') }}" title="{{ t('navbar.contact') }}"><i class="bi bi-envelope"></i></a></li>
+    </ul>
+
+    <ul class="nav-actions d-none d-lg-flex align-items-center gap-3">
+      {% if current_user.is_authenticated %}
         {% if current_user.has_role('admin') %}
-        <li class="nav-item">
-          <a class="nav-link fw-semibold" href="{{ url_for('admin.dashboard') }}" title="{{ t('navbar.admin') }}">🛡️</a>
-        </li>
+        <li><a class="nav-icon" href="{{ url_for('admin.dashboard') }}" title="{{ t('navbar.admin') }}"><i class="bi bi-shield-lock"></i></a></li>
         {% endif %}
-        <li class="nav-item ms-lg-2">
-          <a class="nav-link position-relative" href="{{ url_for('home.notifications') }}" aria-label="{{ t('navbar.notifications') }}">
-            <i class="bi bi-bell-fill"></i>
-            {% set unread_count = current_user.notifications.filter_by(is_read=False).count() %}
-            {% if unread_count %}
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_count }}</span>
-            {% endif %}
-          </a>
-        </li>
+        <li><a class="nav-icon position-relative" href="{{ url_for('home.notifications') }}" aria-label="{{ t('navbar.notifications') }}">
+          <i class="bi bi-bell-fill"></i>
+          {% set unread_count = current_user.notifications.filter_by(is_read=False).count() %}
+          {% if unread_count %}
+          <span class="nav-badge">{{ unread_count }}</span>
+          {% endif %}
+        </a></li>
+      {% endif %}
+      <li><button id="theme-toggle" class="nav-icon theme-toggle" aria-label="{{ t('navbar.toggle_theme') }}"><i class="bi bi-moon-stars-fill"></i></button></li>
+      <li><a class="btn-cta" href="{{ url_for('contact.index') }}">{{ t('navbar.explore') }}</a></li>
+    </ul>
+
+    <button class="nav-mobile-toggle d-lg-none" id="navMobileToggle" aria-label="Ouvrir le menu" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+  </div>
+
+  <div class="nav-mobile-overlay" id="navMobileOverlay">
+    <button class="nav-mobile-close" id="navMobileClose" aria-label="Fermer le menu">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <ul class="nav-mobile-list">
+      <li><a class="nav-mobile-link {% if request.blueprint == 'about' %}active{% endif %}" href="{{ url_for('about.index') }}">{{ t('navbar.about') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'innovation' %}active{% endif %}" href="{{ url_for('innovation.index') }}">{{ t('navbar.innovation') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'renewable' %}active{% endif %}" href="{{ url_for('renewable.index') }}">{{ t('navbar.energy') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'humanitarian' %}active{% endif %}" href="{{ url_for('humanitarian.index') }}">{{ t('navbar.humanitarian') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'projects' %}active{% endif %}" href="{{ url_for('projects.index') }}">{{ t('navbar.projects') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'events' %}active{% endif %}" href="{{ url_for('events.index') }}">{{ t('navbar.events') }}</a></li>
+      <li><a class="nav-mobile-link nav-link-shop {% if request.blueprint == 'shop' %}active{% endif %}" href="{{ url_for('shop.index') }}">{{ t('navbar.shop') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'eval' %}active{% endif %}" href="{{ url_for('eval.index') }}">{{ t('navbar.eval') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'blog' %}active{% endif %}" href="{{ url_for('blog.index') }}">{{ t('navbar.blog') }}</a></li>
+      <li><a class="nav-mobile-link {% if request.blueprint == 'contact' %}active{% endif %}" href="{{ url_for('contact.index') }}">{{ t('navbar.contact') }}</a></li>
+      {% if current_user.is_authenticated %}
+        <li class="nav-mobile-divider"></li>
+        {% if current_user.has_role('admin') %}
+        <li><a class="nav-mobile-link" href="{{ url_for('admin.dashboard') }}">{{ t('navbar.admin') }}</a></li>
         {% endif %}
-        <li class="nav-item ms-lg-2">
-          <button id="theme-toggle" class="theme-toggle" aria-label="{{ t('navbar.toggle_theme') }}">
-            <i class="bi bi-moon-stars-fill"></i>
-          </button>
-        </li>
-        <li class="nav-item ms-lg-2">
-          <a class="btn btn-chere btn-sm" href="{{ url_for('contact.index') }}">{{ t('navbar.explore') }}</a>
-        </li>
-      </ul>
+        <li><a class="nav-mobile-link" href="{{ url_for('home.notifications') }}">{{ t('navbar.notifications') }}</a></li>
+      {% endif %}
+      <li><a class="nav-mobile-link btn-cta-mobile" href="{{ url_for('contact.index') }}">{{ t('navbar.explore') }}</a></li>
+    </ul>
+    <div class="nav-mobile-theme">
+      <button id="theme-toggle-mobile" class="theme-toggle-mobile" aria-label="{{ t('navbar.toggle_theme') }}">
+        <i class="bi bi-moon-stars-fill"></i>
+      </button>
     </div>
   </div>
 </nav>
