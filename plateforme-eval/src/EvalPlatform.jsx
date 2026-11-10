@@ -247,6 +247,18 @@ export default function EvalPlatform() {
           />
         )}
       </main>
+      <footer className="lc-contact-footer max-w-5xl">
+        <p>Une question ou un projet ? Échangez directement avec le concepteur.</p>
+        <a
+          href="https://wa.me/50948592888"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Contacter le concepteur sur WhatsApp au +509 4859 2888"
+        >
+          <span>Contacter le concepteur</span>
+          <span className="lc-contact-whatsapp">WhatsApp ↗</span>
+        </a>
+      </footer>
     </div>
   );
 }
